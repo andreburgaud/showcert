@@ -12,6 +12,27 @@ import (
 	"time"
 )
 
+func TLSVersionToString(v uint16) string {
+	switch v {
+	case tls.VersionTLS10:
+		return "1.0"
+	case tls.VersionTLS11:
+		return "1.1"
+	case tls.VersionTLS12:
+		return "1.2"
+	case tls.VersionTLS13:
+		return "1.3"
+	}
+	return fmt.Sprintf("Unknown TLS version %d", v)
+}
+
+func printTLSDetails(state tls.ConnectionState) {
+	// Display some info about the TLS connection
+	fmt.Fprintf(os.Stderr, "TLS Version  : %s\n", TLSVersionToString(state.Version))
+	fmt.Fprintf(os.Stderr, "Cipher Suite : %s\n", tls.CipherSuiteName(state.CipherSuite))
+	fmt.Fprintf(os.Stderr, "Server Name  : %s\n", state.ServerName)
+}
+
 func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 	var host, port string
 
@@ -23,7 +44,10 @@ func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 
 	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second},
 		"tcp", net.JoinHostPort(host, port),
-		&tls.Config{InsecureSkipVerify: !verif})
+		&tls.Config{
+			InsecureSkipVerify: !verif,
+			MinVersion:         tls.VersionTLS10, // Intentional to test SSL
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -38,9 +62,12 @@ func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 
 	var chains [][]*x509.Certificate
 
+	state := conn.ConnectionState()
+	printTLSDetails(state)
+
 	if verif {
 		//fmt.Println(">>> Verified Chains")
-		verifiedChains := conn.ConnectionState().VerifiedChains
+		verifiedChains := state.VerifiedChains
 		//fmt.Printf("Received %d chains\n", len(verifiedChains))
 		//fmt.Println(verifiedChains)
 		if verifiedChains != nil && len(verifiedChains) > 0 {
@@ -50,7 +77,7 @@ func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 		}
 	} else {
 		//fmt.Println(">>> Peer Certificates")
-		chains = append(chains, conn.ConnectionState().PeerCertificates)
+		chains = append(chains, state.PeerCertificates)
 		//fmt.Printf("Received %d certificates\n", len(chains[0]))
 		if len(chains[0]) == 0 {
 			return nil, errors.New("no peer certificates received")

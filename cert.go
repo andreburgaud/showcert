@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/json"
@@ -124,24 +126,28 @@ func getKeyUsage(usage x509.KeyUsage) []string {
 // SAN: Subject Alternative Name (DNSNames in Golang x509 Certificate)
 // Certificate represents a JSON description of an X.509 certificate.
 type Certificate struct {
-	CertificateNumber  string    `json:"certificate_number"`
-	Version            int       `json:"version,omitempty"`
-	SerialNumber       string    `json:"serial_number,omitempty"`
-	SerialNumberHex    string    `json:"serial_number_hex,omitempty"`
-	Subject            Name      `json:"subject,omitempty"`
-	DNSNames           []string  `json:"dns_names,omitempty"`
-	IPAddresses        []string  `json:"ip_addresses,omitempty"`
-	SubjectKeyId       string    `json:"subject_key_id"`
-	Issuer             Name      `json:"issuer,omitempty"`
-	NotBefore          Time      `json:"not_before"`
-	NotAfter           Time      `json:"not_after"`
-	OCSPServer         string    `json:"ocsp_server,omitempty"`
-	AuthorityKeyId     string    `json:"authority_key_id"`
-	KeyUsage           string    `json:"keyusage"`
-	CertPublicKey      PublicKey `json:"public_key,omitempty"`
-	Signature          string    `json:"signature"`
-	SignatureAlgorithm string    `json:"signature_algorithm"`
-	RawPEM             string    `json:"pem"`
+	CertificateNumber     string    `json:"certificate_number"`
+	Version               int       `json:"version,omitempty"`
+	SerialNumber          string    `json:"serial_number,omitempty"`
+	SerialNumberHex       string    `json:"serial_number_hex,omitempty"`
+	Subject               Name      `json:"subject,omitempty"`
+	DNSNames              []string  `json:"dns_names,omitempty"`
+	IPAddresses           []string  `json:"ip_addresses,omitempty"`
+	SubjectKeyId          string    `json:"subject_key_id"`
+	Issuer                Name      `json:"issuer,omitempty"`
+	NotBefore             Time      `json:"not_before"`
+	NotAfter              Time      `json:"not_after"`
+	SHA1Fingerprint       string    `json:"sha1_fingerprint"`
+	SHA256Fingerprint     string    `json:"sha256_fingerprint"`
+	OCSPServer            string    `json:"ocsp_server,omitempty"`
+	AuthorityKeyId        string    `json:"authority_key_id"`
+	KeyUsage              string    `json:"keyusage"`
+	CertPublicKey         PublicKey `json:"public_key,omitempty"`
+	Signature             string    `json:"signature"`
+	SignatureAlgorithm    string    `json:"signature_algorithm"`
+	Ca                    bool      `json:"certificate_authority"`
+	CRLDistributionPoints []string
+	RawPEM                string `json:"pem"`
 }
 
 // Name represents a JSON description of a PKIX Name
@@ -165,10 +171,10 @@ const (
 )
 
 // bytesToHex convert a buffer of bytes to a string in hexa format
-func bytesToHex(id []byte) string {
+func bytesToHex(buf []byte) string {
 	var s string
 
-	for i, c := range id {
+	for i, c := range buf {
 		if i > 0 {
 			s += ":"
 		}
@@ -211,22 +217,28 @@ func encodePem(cert *x509.Certificate) string {
 // parseCertificate parses an x509 certificate.
 // Modified from https://github.com/cloudflare/cfssl/blob/master/certinfo/certinfo.go
 func parseCertificate(cert *x509.Certificate, total, index int) *Certificate {
+	sha1Fingerprint := sha1.Sum(cert.Raw)
+	sha256Fingerprint := sha256.Sum256(cert.Raw)
 	c := &Certificate{
-		CertificateNumber:  fmt.Sprintf("%d/%d", index+1, total),
-		SerialNumber:       cert.SerialNumber.String(),
-		SerialNumberHex:    intToHex(cert.SerialNumber),
+		CertificateNumber: fmt.Sprintf("%d/%d", index+1, total),
+		SerialNumber:      cert.SerialNumber.String(),
+		SerialNumberHex:   intToHex(cert.SerialNumber),
+
 		Subject:            parseName(cert.Subject),
 		SubjectKeyId:       bytesToHex(cert.SubjectKeyId),
 		DNSNames:           cert.DNSNames,
 		Issuer:             parseName(cert.Issuer),
 		NotBefore:          parseTime(cert.NotBefore),
 		NotAfter:           parseTime(cert.NotAfter),
+		SHA1Fingerprint:    bytesToHex(sha1Fingerprint[:]),
+		SHA256Fingerprint:  bytesToHex(sha256Fingerprint[:]),
 		OCSPServer:         strings.Join(cert.OCSPServer, ", "),
 		Signature:          bytesToHex(cert.Signature),
 		SignatureAlgorithm: fmt.Sprintf("%s", cert.SignatureAlgorithm),
 		CertPublicKey:      parsePublicKey(cert.PublicKey, cert.PublicKeyAlgorithm),
 		AuthorityKeyId:     bytesToHex(cert.AuthorityKeyId),
 		KeyUsage:           strings.Join(getKeyUsage(cert.KeyUsage), ", "),
+		Ca:                 cert.IsCA,
 		RawPEM:             encodePem(cert),
 	}
 	for _, ip := range cert.IPAddresses {

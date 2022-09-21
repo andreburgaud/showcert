@@ -101,11 +101,15 @@ func (cmd Command) execute() error {
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 
 	if len(cmd.domain) > 0 {
-		showRemoteCerts(cmd.domain, cmd.verif)
-		os.Exit(0)
+		err := showRemoteCerts(cmd.domain, cmd.verif)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
 	// Check if any argument is a domain or a cert file and run the equivalent of --domain or --cert
@@ -119,7 +123,10 @@ func (cmd Command) execute() error {
 			return nil
 		}
 		// Assuming this is a domain
-		showRemoteCerts(arg, cmd.verif)
+		err := showRemoteCerts(arg, cmd.verif)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
