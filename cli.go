@@ -13,12 +13,12 @@ const (
 )
 
 type Command struct {
-	help   bool
-	ver    bool
-	verif  bool
-	cert   string
-	domain string
-	args   []string
+	help           bool
+	ver            bool
+	verifiedChains bool
+	cert           string
+	domain         string
+	args           []string
 }
 
 // getExe return the executable name without any path
@@ -41,11 +41,11 @@ func usage() {
 	exe := getExe()
 	fmt.Printf("\n%s shows details about local or remote SSL certificates\n\n", getExe())
 	fmt.Println("Usage:")
-	fmt.Printf("  %s --help\n", exe)
-	fmt.Printf("  %s --version\n", exe)
-	fmt.Printf("  %s --cert <cert_file>\n", exe)
-	fmt.Printf("  %s --verified-chains\n", exe)
-	fmt.Printf("  %s --domain <domain_name>\n", exe)
+	fmt.Printf("  %s --help                  Display this help\n", exe)
+	fmt.Printf("  %s --version               Display application version\n", exe)
+	fmt.Printf("  %s --cert <cert_file>      Point to a local certificate file\n", exe)
+	fmt.Printf("  %s --verified-chains       Request certificate chain verification\n", exe)
+	fmt.Printf("  %s --domain <domain_name>  Point to a remote certificate\n", exe)
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Printf("  %s --domain google.com\n", exe)
@@ -58,21 +58,21 @@ func usage() {
 // parseOptions parse CLI options and return a populated Command
 func parseOptions() *Command {
 
-	// Overwrite the default help to show the overall tool usate rather than the usage for the top flags
-	// To test it, execute the app with a non valid option
+	// Overwrite the default help to show the overall tool usage rather than the usage for the top flags
+	// To test it, execute the app with a non-valid option
 	flag.Usage = func() {
 		usage()
 	}
 
 	var cmd = Command{
-		help:  false,
-		ver:   false,
-		verif: false,
+		help:           false,
+		ver:            false,
+		verifiedChains: false,
 	}
 
 	flag.BoolVar(&cmd.help, "help", false, fmt.Sprintf("Display %s usage", getExe()))
 	flag.BoolVar(&cmd.ver, "version", false, fmt.Sprintf("Display %s version", getExe()))
-	flag.BoolVar(&cmd.verif, "verified-chains", false, "Parse the certs of the verified chains (only with --domain options)")
+	flag.BoolVar(&cmd.verifiedChains, "verified-chains", false, "Parse the certs of the verified chains (only with --domain options)")
 	flag.StringVar(&cmd.cert, "cert", "", "certificate file")
 	flag.StringVar(&cmd.domain, "domain", "", "domain name and port (example: google.com:443)")
 
@@ -105,7 +105,7 @@ func (cmd Command) execute() error {
 	}
 
 	if len(cmd.domain) > 0 {
-		err := showRemoteCerts(cmd.domain, cmd.verif)
+		err := showRemoteCerts(cmd.domain, cmd.verifiedChains)
 		if err != nil {
 			return err
 		}
@@ -123,14 +123,14 @@ func (cmd Command) execute() error {
 			return nil
 		}
 		// Assuming this is a domain
-		err := showRemoteCerts(arg, cmd.verif)
+		err := showRemoteCerts(arg, cmd.verifiedChains)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	fmt.Fprintln(os.Stderr, "no option or argument provided")
+	_, _ = fmt.Fprintln(os.Stderr, "no option or argument provided")
 	usage()
 	return nil
 }

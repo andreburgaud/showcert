@@ -36,7 +36,7 @@ type Time struct {
 	UTCTime   string    `json:"utc_time"`
 }
 
-// parseTime parse a given time and populuate a Time struct
+// parseTime parse a given time and populate a Time struct
 func parseTime(t time.Time) Time {
 	ct := Time{
 		CertTime:  t,
@@ -73,18 +73,18 @@ func parsePublicKey(key any, algo x509.PublicKeyAlgorithm) PublicKey {
 	case x509.Ed25519:
 		// Not implemented yet
 	case x509.RSA:
-		rsak := key.(*rsa.PublicKey)
-		pk.Exponent = rsak.E
-		pk.ExponentBits = bits.Len32(uint32(rsak.E))
-		pk.Modulus = intToHex(rsak.N)
-		pk.ModulusBits = rsak.N.BitLen()
+		rsaKey := key.(*rsa.PublicKey)
+		pk.Exponent = rsaKey.E
+		pk.ExponentBits = bits.Len32(uint32(rsaKey.E))
+		pk.Modulus = intToHex(rsaKey.N)
+		pk.ModulusBits = rsaKey.N.BitLen()
 	case x509.ECDSA:
-		ecdsak := key.(*ecdsa.PublicKey)
-		pk.Curve = ecdsak.Curve.Params().Name
-		pk.X = intToHex(ecdsak.X)
-		pk.XBits = ecdsak.X.BitLen()
-		pk.Y = intToHex(ecdsak.Y)
-		pk.YBits = ecdsak.Y.BitLen()
+		ecdsaKey := key.(*ecdsa.PublicKey)
+		pk.Curve = ecdsaKey.Curve.Params().Name
+		pk.X = intToHex(ecdsaKey.X)
+		pk.XBits = ecdsaKey.X.BitLen()
+		pk.Y = intToHex(ecdsaKey.Y)
+		pk.YBits = ecdsaKey.Y.BitLen()
 	}
 	return pk
 }
@@ -123,8 +123,8 @@ func getKeyUsage(usage x509.KeyUsage) []string {
 	return usages
 }
 
-// SAN: Subject Alternative Name (DNSNames in Golang x509 Certificate)
 // Certificate represents a JSON description of an X.509 certificate.
+// SAN: Subject Alternative Name (DNSNames in Golang x509 Certificate)
 type Certificate struct {
 	CertificateNumber     string    `json:"certificate_number"`
 	Version               int       `json:"version,omitempty"`
@@ -141,7 +141,7 @@ type Certificate struct {
 	SHA256Fingerprint     string    `json:"sha256_fingerprint"`
 	OCSPServer            string    `json:"ocsp_server,omitempty"`
 	AuthorityKeyId        string    `json:"authority_key_id"`
-	KeyUsage              string    `json:"keyusage"`
+	KeyUsage              string    `json:"key_usage"`
 	CertPublicKey         PublicKey `json:"public_key,omitempty"`
 	Signature             string    `json:"signature"`
 	SignatureAlgorithm    string    `json:"signature_algorithm"`
@@ -165,12 +165,7 @@ type Name struct {
 	ExtraNames         []interface{} `json:"extra_names,omitempty"`
 }
 
-const (
-	layoutISO8601 = "2006-01-02T15:04:05-0700"
-	layoutUS      = "Monday, January 2, 2006 at 3:04:05 PM MST"
-)
-
-// bytesToHex convert a buffer of bytes to a string in hexa format
+// bytesToHex convert a buffer of bytes to a string in hexadecimal format
 func bytesToHex(buf []byte) string {
 	var s string
 
@@ -184,11 +179,11 @@ func bytesToHex(buf []byte) string {
 	return s
 }
 
-// intToHex convert a bigint to its hexa string representation
+// intToHex convert a bigint to its hexadecimal string representation
 func intToHex(i *big.Int) string {
 	hex := fmt.Sprintf("%X", i)
 	if len(hex)%2 == 1 {
-		// Add an inital 0 if odd number of chars
+		// Add an initial 0 if odd number of chars
 		hex = "0" + hex
 	}
 
@@ -214,7 +209,7 @@ func encodePem(cert *x509.Certificate) string {
 	return string(b)
 }
 
-// parseCertificate parses an x509 certificate.
+// parseCertificate parses a x509 certificate.
 // Modified from https://github.com/cloudflare/cfssl/blob/master/certinfo/certinfo.go
 func parseCertificate(cert *x509.Certificate, total, index int) *Certificate {
 	sha1Fingerprint := sha1.Sum(cert.Raw)
@@ -285,13 +280,13 @@ func parseChains(chains [][]*x509.Certificate) *Chains {
 }
 
 // parseCertificates parses a list of certificates
-func parseCertificates(chain []*x509.Certificate, total_chains, index int) *CertificateChain {
+func parseCertificates(chain []*x509.Certificate, totalChains, index int) *CertificateChain {
 	cc := &CertificateChain{
-		ChainNumber: fmt.Sprintf("%d/%d", index+1, total_chains),
+		ChainNumber: fmt.Sprintf("%d/%d", index+1, totalChains),
 	}
-	total_certs := len(chain)
+	totalCerts := len(chain)
 	for i, cert := range chain {
-		cc.Certificates = append(cc.Certificates, *parseCertificate(cert, total_certs, i))
+		cc.Certificates = append(cc.Certificates, *parseCertificate(cert, totalCerts, i))
 	}
 	return cc
 }

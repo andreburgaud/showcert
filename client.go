@@ -6,7 +6,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"time"
@@ -28,9 +27,9 @@ func TLSVersionToString(v uint16) string {
 
 func printTLSDetails(state tls.ConnectionState) {
 	// Display some info about the TLS connection
-	fmt.Fprintf(os.Stderr, "TLS Version  : %s\n", TLSVersionToString(state.Version))
-	fmt.Fprintf(os.Stderr, "Cipher Suite : %s\n", tls.CipherSuiteName(state.CipherSuite))
-	fmt.Fprintf(os.Stderr, "Server Name  : %s\n", state.ServerName)
+	_, _ = fmt.Fprintf(os.Stderr, "TLS Version  : %s\n", TLSVersionToString(state.Version))
+	_, _ = fmt.Fprintf(os.Stderr, "Cipher Suite : %s\n", tls.CipherSuiteName(state.CipherSuite))
+	_, _ = fmt.Fprintf(os.Stderr, "Server Name  : %s\n", state.ServerName)
 }
 
 func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
@@ -51,13 +50,15 @@ func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer func(conn *tls.Conn) {
+		_ = conn.Close()
+	}(conn)
 
 	// Test
 	if err := conn.VerifyHostname(host); err != nil {
-		fmt.Fprintf(os.Stderr, "Error while verifying the hostname: %s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error while verifying the hostname: %s\n", err)
 	} else {
-		fmt.Fprintf(os.Stderr, "Hostname %s verification successful\n", host)
+		_, _ = fmt.Fprintf(os.Stderr, "Hostname %s verification successful\n", host)
 	}
 
 	var chains [][]*x509.Certificate
@@ -73,7 +74,7 @@ func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 		if verifiedChains != nil && len(verifiedChains) > 0 {
 			chains = verifiedChains
 		} else {
-			fmt.Println("no verified certificates, trying peers")
+			_, _ = fmt.Println("no verified certificates, trying peers")
 		}
 	} else {
 		//fmt.Println(">>> Peer Certificates")
@@ -90,14 +91,14 @@ func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 func getLocalCert(certFile string) (*x509.Certificate, error) {
 
 	// Open and read PEM file
-	data, err := ioutil.ReadFile(certFile)
+	data, err := os.ReadFile(certFile)
 	if err != nil {
 		return nil, err
 	}
 	block, rest := pem.Decode(data)
 	if block == nil || block.Type != "CERTIFICATE" {
-		fmt.Printf("Rest of PEM file content: %x", rest)
-		return nil, fmt.Errorf("Bad PEM file %s", certFile)
+		_, _ = fmt.Printf("rest of PEM file content: %x", rest)
+		return nil, fmt.Errorf("bad PEM file %s", certFile)
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
