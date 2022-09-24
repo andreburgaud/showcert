@@ -140,7 +140,7 @@ type Certificate struct {
 	SHA1Fingerprint       string    `json:"sha1_fingerprint"`
 	SHA256Fingerprint     string    `json:"sha256_fingerprint"`
 	OCSPServer            string    `json:"ocsp_server,omitempty"`
-	AuthorityKeyId        string    `json:"authority_key_id"`
+	AuthorityKeyId        string    `json:"authority_key_id,omitempty"`
 	KeyUsage              string    `json:"key_usage"`
 	CertPublicKey         PublicKey `json:"public_key,omitempty"`
 	Signature             string    `json:"signature"`
