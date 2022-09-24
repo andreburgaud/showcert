@@ -23,7 +23,6 @@ test:
 build:
 	go build -o {{APP}} *.go
 release:
-    #go build -ldflags="-s -w" -o {{APP}} *.go
     go build -o {{APP}} -ldflags="-s -w -X 'main.version={{VERSION}}'" *.go
     upx {{APP}}
 
