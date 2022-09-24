@@ -111,7 +111,7 @@ $ just build
 If you only have [Go](https://go.dev/) installed:
 
 ```
-$ ggo build -o showcert *.go
+$ go build -o showcert *.go
 ```
 
 ## Release
