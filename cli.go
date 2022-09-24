@@ -49,6 +49,7 @@ func usage() {
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Printf("  %s --domain google.com\n", exe)
+	fmt.Printf("  %s --domain google.com:443\n", exe)
 	fmt.Printf("  %s google.com\n", exe)
 	fmt.Printf("  %s --verified-chains --domain google.com \n", exe)
 	fmt.Printf("  %s --verified-chains google.com\n", exe)
