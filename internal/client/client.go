@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"crypto/tls"
@@ -32,7 +32,7 @@ func printTLSDetails(state tls.ConnectionState) {
 	_, _ = fmt.Fprintf(os.Stderr, "Server Name  : %s\n", state.ServerName)
 }
 
-func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
+func GetRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 	var host, port string
 
 	var err error
@@ -88,7 +88,7 @@ func getRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 }
 
 // getLocalCert builds and return an SSL Certificate object given a valid cert file (PEM format)
-func getLocalCert(certFile string) (*x509.Certificate, error) {
+func GetLocalCert(certFile string) (*x509.Certificate, error) {
 
 	// Open and read PEM file
 	data, err := os.ReadFile(certFile)

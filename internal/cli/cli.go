@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"errors"
@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"showcert/internal/cert"
+	"showcert/internal/client"
 )
 
 var (
-	version = "dev"
+	Version = "dev"
 )
 
 type Command struct {
@@ -57,7 +60,7 @@ func usage() {
 }
 
 // parseOptions parse CLI options and return a populated Command
-func parseOptions() *Command {
+func ParseOptions() *Command {
 
 	// Overwrite the default help to show the overall tool usage rather than the usage for the top flags
 	// To test it, execute the app with a non-valid option
@@ -85,7 +88,7 @@ func parseOptions() *Command {
 	}
 
 	if cmd.ver {
-		fmt.Printf("%s version %s\n", getExe(), version)
+		fmt.Printf("%s version %s\n", getExe(), Version)
 		os.Exit(0)
 	}
 
@@ -95,7 +98,7 @@ func parseOptions() *Command {
 }
 
 // execute the command from the properties of Command
-func (cmd Command) execute() error {
+func (cmd Command) Execute() error {
 
 	if len(cmd.cert) > 0 {
 		err := showLocalCert(cmd.cert)
@@ -138,11 +141,11 @@ func (cmd Command) execute() error {
 
 // showLocalCert trigger the command to open a local cert file and show the details about it
 func showLocalCert(certFile string) error {
-	cert, err := getLocalCert(certFile)
+	c, err := client.GetLocalCert(certFile)
 	if err != nil {
 		return err
 	}
-	jsonCert, err := genJson(cert)
+	jsonCert, err := cert.GenJson(c)
 	if err != nil {
 		return err
 	}
@@ -152,12 +155,12 @@ func showLocalCert(certFile string) error {
 
 // showRemoteCert trigger the command to open a local cert file and show the details about it
 func showRemoteCerts(domain string, verif bool) error {
-	chains, err := getRemoteCerts(domain, verif)
+	chains, err := client.GetRemoteCerts(domain, verif)
 	if err != nil {
 		return err
 	}
 
-	jsonChains, err := genJsonChains(chains)
+	jsonChains, err := cert.GenJsonChains(chains)
 	if err != nil {
 		return err
 	}

@@ -59,9 +59,17 @@ Server Name  : google.com
             "*.origin-test.bdn.dev",
             "*.cloud.google.com",
             "*.crowdsource.google.com",
-            "*.datacompute.google.com",
-...
+            "*.datacompute.google.com"
+          ]
+        }
+      ]
+    }
+  ]
+}
 ```
+
+_The JSON above is truncated to improve the readability of this document._
+
 To extract a specific attribute of the JSON file, you can use `jq`. Here are some examples
 (stderr output omitted for improved readability):
 

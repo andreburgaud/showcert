@@ -1,5 +1,8 @@
-VERSION := "0.2.0"
+VERSION := "0.3.0"
 APP := "showcert"
+BUILD_DIR := "build"
+DEBUG_DIR := BUILD_DIR / "debug"
+RELEASE_DIR := BUILD_DIR / "release"
 
 alias b := build
 alias c := clean
@@ -14,17 +17,18 @@ default:
 
 # Clean binaries
 clean:
-	-rm {{APP}}
+	-rm -rf {{BUILD_DIR}}
 
 # Execute tests
 test:
 	@echo Not implemented yet
 
 build:
-	go build -o {{APP}} *.go
+	go build -o {{DEBUG_DIR}}/{{APP}} showcert/cmd/showcert
+
 release:
-    go build -o {{APP}} -ldflags="-s -w -X 'main.version={{VERSION}}'" *.go
-    upx {{APP}}
+    go build -o {{RELEASE_DIR}}/{{APP}} -ldflags="-s -w -X 'showcert/internal/cli.Version={{VERSION}}'" showcert/cmd/showcert
+    -upx {{RELEASE_DIR}}/{{APP}}
 
 # Tag and push the code to Github
 push-tag: version

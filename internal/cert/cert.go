@@ -1,4 +1,4 @@
-package main
+package cert
 
 import (
 	"bytes"
@@ -291,8 +291,8 @@ func parseCertificates(chain []*x509.Certificate, totalChains, index int) *Certi
 	return cc
 }
 
-// genJsonChains generate a JSON string for a list of chains
-func genJsonChains(chains [][]*x509.Certificate) (string, error) {
+// GenJsonChains generate a JSON string for a list of chains
+func GenJsonChains(chains [][]*x509.Certificate) (string, error) {
 	cs := parseChains(chains)
 
 	var err error
@@ -306,8 +306,8 @@ func genJsonChains(chains [][]*x509.Certificate) (string, error) {
 	return string(buf), nil
 }
 
-// genJson generate a JSON string for a single certificate
-func genJson(cert *x509.Certificate) (string, error) {
+// GenJson generate a JSON string for a single certificate
+func GenJson(cert *x509.Certificate) (string, error) {
 	c := parseCertificate(cert, 1, 0)
 
 	var err error
@@ -319,5 +319,4 @@ func genJson(cert *x509.Certificate) (string, error) {
 		}
 	}
 	return string(buf), nil
-
 }
