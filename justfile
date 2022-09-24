@@ -1,4 +1,4 @@
-VERSION := "0.1.0"
+VERSION := "0.2.0"
 APP := "showcert"
 
 alias b := build
@@ -6,7 +6,7 @@ alias c := clean
 alias t := test
 alias v := version
 alias pt := push-tag
-alias rel := release
+alias r := release
 
 # Default recipe (this list)
 default:
@@ -23,7 +23,8 @@ test:
 build:
 	go build -o {{APP}} *.go
 release:
-    go build -ldflags="-s -w" -o {{APP}} *.go
+    #go build -ldflags="-s -w" -o {{APP}} *.go
+    go build -o {{APP}} -ldflags="-s -w -X 'main.version={{VERSION}}'" *.go
     upx {{APP}}
 
 # Tag and push the code to Github

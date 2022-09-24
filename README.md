@@ -28,12 +28,16 @@ Examples:
 
 For a better user experience, you can pipe the JSON output of `showcert` to [jq](https://stedolan.github.io/jq/).
 
-# Development
-
 ## Build
+
+## Development
 
 ```
 $ just build
 ```
 
+## Release
 
+```
+$ just release
+```
