@@ -168,14 +168,12 @@ type Name struct {
 // bytesToHex convert a buffer of bytes to a string in hexadecimal format
 func bytesToHex(buf []byte) string {
 	var s string
-
 	for i, c := range buf {
 		if i > 0 {
 			s += ":"
 		}
 		s += fmt.Sprintf("%02X", c)
 	}
-
 	return s
 }
 
@@ -187,7 +185,7 @@ func intToHex(i *big.Int) string {
 		hex = "0" + hex
 	}
 
-	// Insert a column between any 2 chars
+	// Insert a colon character between any 2 chars
 	var r bytes.Buffer
 	last := len(hex) - 1
 	for i, c := range hex {

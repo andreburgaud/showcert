@@ -32,6 +32,7 @@ func printTLSDetails(state tls.ConnectionState) {
 	_, _ = fmt.Fprintf(os.Stderr, "Server Name  : %s\n", state.ServerName)
 }
 
+// GetRemoteCerts returns one or more certificate chains from a TLS server
 func GetRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 	var host, port string
 
@@ -87,7 +88,7 @@ func GetRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 	return chains, nil
 }
 
-// getLocalCert builds and return an SSL Certificate object given a valid cert file (PEM format)
+// GetLocalCert builds and return an SSL Certificate object given a valid cert file (PEM format)
 func GetLocalCert(certFile string) (*x509.Certificate, error) {
 
 	// Open and read PEM file

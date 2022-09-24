@@ -21,7 +21,7 @@ clean:
 
 # Execute tests
 test:
-	@echo Not implemented yet
+	go test -v ./...
 
 build:
 	go build -o {{DEBUG_DIR}}/{{APP}} showcert/cmd/showcert
