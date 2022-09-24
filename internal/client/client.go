@@ -33,7 +33,7 @@ func printTLSDetails(state tls.ConnectionState) {
 }
 
 // GetRemoteCerts returns one or more certificate chains from a TLS server
-func GetRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
+func GetRemoteCerts(domain string, verify bool) ([][]*x509.Certificate, error) {
 	var host, port string
 
 	var err error
@@ -45,7 +45,7 @@ func GetRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second},
 		"tcp", net.JoinHostPort(host, port),
 		&tls.Config{
-			InsecureSkipVerify: !verif,
+			InsecureSkipVerify: !verify,
 			MinVersion:         tls.VersionTLS10, // Intentional to test SSL
 		})
 	if err != nil {
@@ -57,9 +57,9 @@ func GetRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 
 	// Test
 	if err := conn.VerifyHostname(host); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Error while verifying the hostname: %s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "error while verifying the hostname: %s\n", err)
 	} else {
-		_, _ = fmt.Fprintf(os.Stderr, "Hostname %s verification successful\n", host)
+		_, _ = fmt.Fprintf(os.Stderr, "hostname %s verification successful\n", host)
 	}
 
 	var chains [][]*x509.Certificate
@@ -67,11 +67,8 @@ func GetRemoteCerts(domain string, verif bool) ([][]*x509.Certificate, error) {
 	state := conn.ConnectionState()
 	printTLSDetails(state)
 
-	if verif {
-		//fmt.Println(">>> Verified Chains")
+	if verify {
 		verifiedChains := state.VerifiedChains
-		//fmt.Printf("Received %d chains\n", len(verifiedChains))
-		//fmt.Println(verifiedChains)
 		if verifiedChains != nil && len(verifiedChains) > 0 {
 			chains = verifiedChains
 		} else {

@@ -16,12 +16,12 @@ var (
 )
 
 type Command struct {
-	help           bool
-	ver            bool
-	verifiedChains bool
-	cert           string
-	domain         string
-	args           []string
+	help    bool
+	version bool
+	verify  bool
+	cert    string
+	domain  string
+	args    []string
 }
 
 // getExe return the executable name without any path
@@ -59,7 +59,7 @@ func usage() {
 	fmt.Printf("  %s --cert some_cert.pem\n", exe)
 }
 
-// parseOptions parse CLI options and return a populated Command
+// ParseOptions parse CLI options and return a populated Command
 func ParseOptions() *Command {
 
 	// Overwrite the default help to show the overall tool usage rather than the usage for the top flags
@@ -69,14 +69,14 @@ func ParseOptions() *Command {
 	}
 
 	var cmd = Command{
-		help:           false,
-		ver:            false,
-		verifiedChains: false,
+		help:    false,
+		verify:  false,
+		version: false,
 	}
 
 	flag.BoolVar(&cmd.help, "help", false, fmt.Sprintf("Display %s usage", getExe()))
-	flag.BoolVar(&cmd.ver, "version", false, fmt.Sprintf("Display %s version", getExe()))
-	flag.BoolVar(&cmd.verifiedChains, "verified-chains", false, "Parse the certs of the verified chains (only with --domain options)")
+	flag.BoolVar(&cmd.version, "version", false, fmt.Sprintf("Display %s version", getExe()))
+	flag.BoolVar(&cmd.verify, "verify", false, "Parse the certs of the verified chains (only with --domain options)")
 	flag.StringVar(&cmd.cert, "cert", "", "certificate file")
 	flag.StringVar(&cmd.domain, "domain", "", "domain name and port (example: google.com:443)")
 
@@ -87,7 +87,7 @@ func ParseOptions() *Command {
 		os.Exit(0)
 	}
 
-	if cmd.ver {
+	if cmd.version {
 		fmt.Printf("%s version %s\n", getExe(), Version)
 		os.Exit(0)
 	}
@@ -97,7 +97,7 @@ func ParseOptions() *Command {
 	return &cmd
 }
 
-// execute the command from the properties of Command
+// Execute the command from the properties of Command
 func (cmd Command) Execute() error {
 
 	if len(cmd.cert) > 0 {
@@ -109,7 +109,7 @@ func (cmd Command) Execute() error {
 	}
 
 	if len(cmd.domain) > 0 {
-		err := showRemoteCerts(cmd.domain, cmd.verifiedChains)
+		err := showRemoteCerts(cmd.domain, cmd.verify)
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func (cmd Command) Execute() error {
 			return nil
 		}
 		// Assuming this is a domain
-		err := showRemoteCerts(arg, cmd.verifiedChains)
+		err := showRemoteCerts(arg, cmd.verify)
 		if err != nil {
 			return err
 		}
@@ -154,8 +154,8 @@ func showLocalCert(certFile string) error {
 }
 
 // showRemoteCert trigger the command to open a local cert file and show the details about it
-func showRemoteCerts(domain string, verif bool) error {
-	chains, err := client.GetRemoteCerts(domain, verif)
+func showRemoteCerts(domain string, verify bool) error {
+	chains, err := client.GetRemoteCerts(domain, verify)
 	if err != nil {
 		return err
 	}

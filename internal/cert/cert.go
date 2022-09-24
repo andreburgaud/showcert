@@ -146,8 +146,8 @@ type Certificate struct {
 	Signature             string    `json:"signature"`
 	SignatureAlgorithm    string    `json:"signature_algorithm"`
 	Ca                    bool      `json:"certificate_authority"`
-	CRLDistributionPoints []string
-	RawPEM                string `json:"pem"`
+	CRLDistributionPoints []string  `json:"clr_distribution_points,omitempty"`
+	RawPEM                string    `json:"pem"`
 }
 
 // Name represents a JSON description of a PKIX Name
