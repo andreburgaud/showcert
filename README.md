@@ -26,7 +26,42 @@ Examples:
   showcert --cert some_cert.pem
 ```
 
-For a better user experience, you can pipe the JSON output of `showcert` to [jq](https://stedolan.github.io/jq/).
+For a better user experience, you can pipe the `showcert` JSON output to [jq](https://stedolan.github.io/jq/).
+
+```
+[andre@saturne showcert]$ ./showcert --verified-chains google.com | jq
+Hostname google.com verification successful
+TLS Version  : 1.3
+Cipher Suite : TLS_AES_128_GCM_SHA256
+Server Name  : google.com
+```
+```json
+{
+  "chains": [
+    {
+      "chain_number": "1/2",
+      "certificates": [
+        {
+          "certificate_number": "1/3",
+          "serial_number": "229955072568388950586185815992730584931",
+          "serial_number_hex": "AC:FF:BC:6B:4D:AB:E7:32:0A:43:2A:F9:44:F3:07:63",
+          "subject": {
+            "common_name": "*.google.com",
+            "names": [
+              "*.google.com"
+            ]
+          },
+          "dns_names": [
+            "*.google.com",
+            "*.appengine.google.com",
+            "*.bdn.dev",
+            "*.origin-test.bdn.dev",
+            "*.cloud.google.com",
+            "*.crowdsource.google.com",
+            "*.datacompute.google.com",
+...
+```
+
 
 ## Build
 
