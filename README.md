@@ -144,7 +144,7 @@ $ docker run --rm andreburgaud/showcert google.com | jq -r '.chains[0].certifica
 
 ## Build
 
-## Development
+### Development
 
 If you have [just](https://github.com/casey/just) and [Go](https://go.dev/) installed:
 ```
@@ -157,7 +157,7 @@ If you only have [Go](https://go.dev/) installed:
 $ go build -o showcert *.go
 ```
 
-## Release
+### Release
 
 A release version will be smaller and optimized.
 It requires [just](https://github.com/casey/just), [Go](https://go.dev/) and [UPX](https://upx.github.io/):
@@ -171,3 +171,9 @@ If you only have [Go](https://go.dev/) installed:
 ```
 $ go build -o showcert -ldflags="-s -w -X 'main.version=0.2.0'" *.go
 ```
+
+## License
+
+The `showcert` source code is released under the [MIT license](LICENSE). 
+
+`showcert` includes some code from [CFSSL](https://github.com/cloudflare/cfssl) released under a BSD-2-Clause license. References to `CFSSL` are included in the appropriate `showcert` files.
