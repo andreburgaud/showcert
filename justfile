@@ -35,7 +35,7 @@ release:
 
 # Build a local docker image
 docker:
-    sudo docker build -t showcert .
+    sudo docker build -t {{DOCKER_IMAGE}} .
     sudo docker build --build-arg SHOWCERT_VERSION={{VERSION}} -t {{DOCKER_IMAGE}}:{{VERSION}} .
 
 # Push showcert docker image to docker hub
