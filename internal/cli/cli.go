@@ -47,15 +47,15 @@ func usage() {
 	fmt.Printf("  %s --help                  Display this help\n", exe)
 	fmt.Printf("  %s --version               Display application version\n", exe)
 	fmt.Printf("  %s --cert <cert_file>      Point to a local certificate file\n", exe)
-	fmt.Printf("  %s --verified-chains       Request certificate chain verification\n", exe)
+	fmt.Printf("  %s --verify                Request certificate chain verification\n", exe)
 	fmt.Printf("  %s --domain <domain_name>  Point to a remote certificate\n", exe)
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Printf("  %s --domain google.com\n", exe)
 	fmt.Printf("  %s --domain google.com:443\n", exe)
 	fmt.Printf("  %s google.com\n", exe)
-	fmt.Printf("  %s --verified-chains --domain google.com \n", exe)
-	fmt.Printf("  %s --verified-chains google.com\n", exe)
+	fmt.Printf("  %s --verify --domain google.com \n", exe)
+	fmt.Printf("  %s --verify google.com\n", exe)
 	fmt.Printf("  %s --cert some_cert.pem\n", exe)
 }
 
