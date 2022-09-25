@@ -47,7 +47,7 @@ func usage() {
 	fmt.Printf("  %s --help                  Display this help\n", exe)
 	fmt.Printf("  %s --version               Display application version\n", exe)
 	fmt.Printf("  %s --cert <cert_file>      Point to a local certificate file\n", exe)
-	fmt.Printf("  %s --verify                Request certificate chain verification\n", exe)
+	fmt.Printf("  %s --verify <domain_name>  Request certificate chain verification\n", exe)
 	fmt.Printf("  %s --domain <domain_name>  Point to a remote certificate\n", exe)
 	fmt.Println()
 	fmt.Println("Examples:")
