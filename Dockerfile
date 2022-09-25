@@ -15,5 +15,6 @@ RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o showcert -ldflags="-s -w -
 # copy artifacts to a scratch image
 FROM scratch
 COPY --from=build /project/showcert /showcert
+COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENTRYPOINT [ "/showcert" ]
 CMD ["--help"]
