@@ -1,13 +1,22 @@
 # ShowCert
 
-`showcert` exports SSL certificate attributes into a JSON format.
+`showcert` displays SSL certificate attributes in JSON format.
+
 The target can be a local file or a remote server. In the latter scenario, 
-the target is a domain.
+the argument is a server name and port if different than the default TLS port 443.
 
 ## Examples
 
+The simplest example would be something like:
+
 ```
-$ ./showcert --help
+$ showcert google.com
+```
+
+For more details about the options available with `showcert`, execute `showcert` with the `--help` option:
+
+```
+$ showcert --help
 
 showcert shows details about local or remote SSL certificates
 
@@ -30,7 +39,7 @@ Examples:
 For a better user experience, you can pipe the `showcert` JSON output to [jq](https://stedolan.github.io/jq/).
 
 ```
-[andre@saturne showcert]$ ./showcert --verified-chains google.com | jq
+$ showcert --verified-chains google.com | jq
 Hostname google.com verification successful
 TLS Version  : 1.3
 Cipher Suite : TLS_AES_128_GCM_SHA256
@@ -76,7 +85,7 @@ To extract a specific attribute of the JSON file, you can use `jq`. Here are som
 Extract the first raw PEM certificate:
 
 ```
-./showcert google.com | jq -r '.chains[0].certificates[0].pem'
+$ showcert google.com | jq -r '.chains[0].certificates[0].pem'
 -----BEGIN CERTIFICATE-----
 MIIN7jCCDNagAwIBAgIRAKz/vGtNq+cyCkMq+UTzB2MwDQYJKoZIhvcNAQELBQAw
 RjELMAkGA1UEBhMCVVMxIjAgBgNVBAoTGUdvb2dsZSBUcnVzdCBTZXJ2aWNlcyBM
@@ -86,7 +95,7 @@ RjELMAkGA1UEBhMCVVMxIjAgBgNVBAoTGUdvb2dsZSBUcnVzdCBTZXJ2aWNlcyBM
 List all the SHA256 fingerprints:
 
 ```
-$ ./showcert --verified-chains google.com | jq '.chains[].certificates[].sha256_fingerprint'
+$ showcert --verified-chains google.com | jq '.chains[].certificates[].sha256_fingerprint'
 "6D:8C:E1:6A:5C:A3:F0:91:40:DE:07:37:AD:4A:AD:DA:66:6A:AF:14:16:AB:9F:4E:7E:E8:40:8B:E9:1B:7B:F3"
 "23:EC:B0:3E:EC:17:33:8C:4E:33:A6:B4:8A:41:DC:3C:DA:12:28:1B:BC:3F:F8:13:C0:58:9D:6C:C2:38:75:22"
 "2A:57:54:71:E3:13:40:BC:21:58:1C:BD:2C:F1:3E:15:84:63:20:3E:CE:94:BC:F9:D3:CC:19:6B:F0:9A:54:72"
@@ -99,7 +108,7 @@ $ ./showcert --verified-chains google.com | jq '.chains[].certificates[].sha256_
 Display all authority key ids for CA certificates:
 
 ```
-$ ./showcert --verified-chains google.com | jq '.chains[].certificates[] | select(.certificate_authority == true) | .authority_key_id'
+$ showcert --verified-chains google.com | jq '.chains[].certificates[] | select(.certificate_authority == true) | .authority_key_id'
 "E4:AF:2B:26:71:1A:2B:48:27:85:2F:52:66:2C:EF:F0:89:13:71:3E"
 null
 "E4:AF:2B:26:71:1A:2B:48:27:85:2F:52:66:2C:EF:F0:89:13:71:3E"
