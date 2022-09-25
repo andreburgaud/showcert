@@ -24,22 +24,22 @@ Usage:
   showcert --help                  Display this help
   showcert --version               Display application version
   showcert --cert <cert_file>      Point to a local certificate file
-  showcert --verified-chains       Request certificate chain verification
+  showcert --verify                Request certificate chain verification
   showcert --domain <domain_name>  Point to a remote certificate
 
 Examples:
   showcert --domain google.com
   showcert --domain google.com:443
   showcert google.com
-  showcert --verified-chains --domain google.com 
-  showcert --verified-chains google.com
+  showcert --verify --domain google.com 
+  showcert --verify google.com
   showcert --cert some_cert.pem
 ```
 
 For a better user experience, you can pipe the `showcert` JSON output to [jq](https://stedolan.github.io/jq/).
 
 ```
-$ showcert --verified-chains google.com | jq
+$ showcert --verify google.com | jq
 Hostname google.com verification successful
 TLS Version  : 1.3
 Cipher Suite : TLS_AES_128_GCM_SHA256
@@ -95,7 +95,7 @@ RjELMAkGA1UEBhMCVVMxIjAgBgNVBAoTGUdvb2dsZSBUcnVzdCBTZXJ2aWNlcyBM
 List all the SHA256 fingerprints:
 
 ```
-$ showcert --verified-chains google.com | jq '.chains[].certificates[].sha256_fingerprint'
+$ showcert --verify google.com | jq '.chains[].certificates[].sha256_fingerprint'
 "6D:8C:E1:6A:5C:A3:F0:91:40:DE:07:37:AD:4A:AD:DA:66:6A:AF:14:16:AB:9F:4E:7E:E8:40:8B:E9:1B:7B:F3"
 "23:EC:B0:3E:EC:17:33:8C:4E:33:A6:B4:8A:41:DC:3C:DA:12:28:1B:BC:3F:F8:13:C0:58:9D:6C:C2:38:75:22"
 "2A:57:54:71:E3:13:40:BC:21:58:1C:BD:2C:F1:3E:15:84:63:20:3E:CE:94:BC:F9:D3:CC:19:6B:F0:9A:54:72"
@@ -108,7 +108,7 @@ $ showcert --verified-chains google.com | jq '.chains[].certificates[].sha256_fi
 Display all authority key ids for CA certificates:
 
 ```
-$ showcert --verified-chains google.com | jq '.chains[].certificates[] | select(.certificate_authority == true) | .authority_key_id'
+$ showcert --verify google.com | jq '.chains[].certificates[] | select(.certificate_authority == true) | .authority_key_id'
 "E4:AF:2B:26:71:1A:2B:48:27:85:2F:52:66:2C:EF:F0:89:13:71:3E"
 null
 "E4:AF:2B:26:71:1A:2B:48:27:85:2F:52:66:2C:EF:F0:89:13:71:3E"
