@@ -9,7 +9,8 @@ alias b := build
 alias c := clean
 alias t := test
 alias v := version
-alias pt := push-tag
+alias ghp := github-push
+alias dp := docker-push
 alias r := release
 
 # Default recipe (this list)
@@ -33,6 +34,11 @@ release:
     go build -o {{RELEASE_DIR}}/{{APP}} -ldflags="-s -w -X 'showcert/internal/cli.Version={{VERSION}}'" showcert/cmd/showcert
     -upx {{RELEASE_DIR}}/{{APP}}
 
+# Quick run test of a release build (help and google.com)
+run: release
+    {{RELEASE_DIR}}/{{APP}}
+    {{RELEASE_DIR}}/{{APP}} google.com
+
 # Build a local docker image
 docker:
     sudo docker build -t {{DOCKER_IMAGE}} .
@@ -44,12 +50,17 @@ docker-push: docker
     sudo docker tag {{DOCKER_IMAGE}}:{{VERSION}} docker.io/{{DOCKER_IMAGE}}:latest
     sudo docker push docker.io/{{DOCKER_IMAGE}}:latest
 
+# Clean local images
+docker-clean:
+    -sudo docker rmi $(sudo docker images | grep showcert | tr -s ' '| cut -d ' ' -f 3)
+    -sudo docker rmi $(sudo docker images -f dangling=true -q)
+
 # Format Go code
 fmt:
     gofmt -w .
 
-# Tag and push the code to Github
-push-tag: version
+# Push and tag the code to Github
+github-push: version
     @git push
     @git tag -a {{VERSION}} -m "Version {{VERSION}}"
     @git push origin --tags
