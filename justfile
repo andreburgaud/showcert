@@ -17,18 +17,21 @@ default:
 
 # Clean binaries
 clean:
-	-rm -rf {{BUILD_DIR}}
+    -rm -rf {{BUILD_DIR}}
 
 # Execute tests
 test:
-	go test -v ./...
+    go test -v ./...
 
 build:
-	go build -o {{DEBUG_DIR}}/{{APP}} showcert/cmd/showcert
+    go build -o {{DEBUG_DIR}}/{{APP}} showcert/cmd/showcert
 
 release:
     go build -o {{RELEASE_DIR}}/{{APP}} -ldflags="-s -w -X 'showcert/internal/cli.Version={{VERSION}}'" showcert/cmd/showcert
     -upx {{RELEASE_DIR}}/{{APP}}
+
+fmt:
+    gofmt -w .
 
 # Tag and push the code to Github
 push-tag: version
