@@ -1,0 +1,19 @@
+# Build stage
+FROM golang:1.19.1-alpine3.16 as build
+
+ARG SHOWCERT_VERSION=latest
+
+RUN apk update && apk add --no-cache git
+RUN go env -w GOPROXY=direct
+
+RUN mkdir /project
+WORKDIR /project
+ADD . /project
+
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o showcert -ldflags="-s -w -X 'showcert/internal/cli.Version=${SHOWCERT_VERSION}'" showcert/cmd/showcert
+
+# copy artifacts to a scratch image
+FROM scratch
+COPY --from=build /project/showcert /showcert
+ENTRYPOINT [ "/showcert" ]
+CMD ["--help"]

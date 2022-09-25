@@ -107,6 +107,32 @@ null
 null
 ```
 
+## Docker
+
+A docker image is available at https://hub.docker.com/r/andreburgaud/showcert.
+
+To use the image and fetch the Google certificates:
+
+```
+$ docker run --rm andreburgaud/showcert google.com
+...
+```
+
+You can also pipe the result to [jq](https://stedolan.github.io/jq/):
+
+```
+$ docker run --rm andreburgaud/showcert google.com | jq
+...
+```
+
+or to extract only the first certificate in PEM format:
+
+```
+$ docker run --rm andreburgaud/showcert google.com | jq -r '.chains[0].certificates[0].pem'
+...
+```
+
+
 ## Build
 
 ## Development
