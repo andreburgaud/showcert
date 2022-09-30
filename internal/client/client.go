@@ -25,15 +25,16 @@ func TLSVersionToString(v uint16) string {
 	return fmt.Sprintf("Unknown TLS version %d", v)
 }
 
-func printTLSDetails(state tls.ConnectionState) {
-	// Display some info about the TLS connection
-	_, _ = fmt.Fprintf(os.Stderr, "TLS Version  : %s\n", TLSVersionToString(state.Version))
-	_, _ = fmt.Fprintf(os.Stderr, "Cipher Suite : %s\n", tls.CipherSuiteName(state.CipherSuite))
-	_, _ = fmt.Fprintf(os.Stderr, "Server Name  : %s\n", state.ServerName)
+// Response contains TLS connection metadata and the list of chains containing list of certificate
+type Response struct {
+	TlsVersion        string
+	CipherSuite       string
+	HostVerification  bool
+	CertificateChains [][]*x509.Certificate
 }
 
 // GetRemoteCerts returns one or more certificate chains from a TLS server
-func GetRemoteCerts(domain string, verify bool) ([][]*x509.Certificate, error) {
+func GetRemoteCerts(domain string, verify bool) (Response, error) {
 	var host, port string
 
 	var err error
@@ -49,23 +50,19 @@ func GetRemoteCerts(domain string, verify bool) ([][]*x509.Certificate, error) {
 			MinVersion:         tls.VersionTLS10, // Intentional to test SSL
 		})
 	if err != nil {
-		return nil, err
+		return Response{}, err
 	}
 	defer func(conn *tls.Conn) {
 		_ = conn.Close()
 	}(conn)
 
-	// Test
+	hostVerification := true
 	if err := conn.VerifyHostname(host); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "error while verifying the hostname: %s\n", err)
-	} else {
-		_, _ = fmt.Fprintf(os.Stderr, "hostname %s verification successful\n", host)
+		hostVerification = false
 	}
-
 	var chains [][]*x509.Certificate
 
 	state := conn.ConnectionState()
-	printTLSDetails(state)
 
 	if verify {
 		verifiedChains := state.VerifiedChains
@@ -75,14 +72,17 @@ func GetRemoteCerts(domain string, verify bool) ([][]*x509.Certificate, error) {
 			_, _ = fmt.Println("no verified certificates, trying peers")
 		}
 	} else {
-		//fmt.Println(">>> Peer Certificates")
 		chains = append(chains, state.PeerCertificates)
-		//fmt.Printf("Received %d certificates\n", len(chains[0]))
 		if len(chains[0]) == 0 {
-			return nil, errors.New("no peer certificates received")
+			return Response{}, errors.New("no peer certificates received")
 		}
 	}
-	return chains, nil
+	return Response{
+		TlsVersion:        TLSVersionToString(state.Version),
+		CipherSuite:       tls.CipherSuiteName(state.CipherSuite),
+		HostVerification:  hostVerification,
+		CertificateChains: chains,
+	}, nil
 }
 
 // GetLocalCert builds and return an SSL Certificate object given a valid cert file (PEM format)

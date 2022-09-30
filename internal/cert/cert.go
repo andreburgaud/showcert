@@ -19,6 +19,9 @@ import (
 
 // Chains contains a list of chains
 type Chains struct {
+	TlsVersion        string             `json:"tls_version,omitempty"`
+	CipherSuite       string             `json:"cipher_suite,omitempty"`
+	HostVerification  bool               `json:"host_verification"`
 	CertificateChains []CertificateChain `json:"chains"`
 }
 
@@ -266,8 +269,8 @@ func parseName(name pkix.Name) Name {
 	return n
 }
 
-// parseChains parses a list of chains
-func parseChains(chains [][]*x509.Certificate) *Chains {
+// ParseChains parses a chain of certificate and return a Chains structure
+func ParseChains(chains [][]*x509.Certificate) *Chains {
 	total := len(chains)
 	cs := &Chains{}
 
@@ -287,21 +290,6 @@ func parseCertificates(chain []*x509.Certificate, totalChains, index int) *Certi
 		cc.Certificates = append(cc.Certificates, *parseCertificate(cert, totalCerts, i))
 	}
 	return cc
-}
-
-// GenJsonChains generate a JSON string for a list of chains
-func GenJsonChains(chains [][]*x509.Certificate) (string, error) {
-	cs := parseChains(chains)
-
-	var err error
-	var buf []byte
-	if cs != nil {
-		buf, err = json.MarshalIndent(cs, "", "  ")
-		if err != nil {
-			return "", err
-		}
-	}
-	return string(buf), nil
 }
 
 // GenJson generate a JSON string for a single certificate

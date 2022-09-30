@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -153,17 +154,32 @@ func showLocalCert(certFile string) error {
 	return nil
 }
 
+// buildJsonChains creates a JSON string from a Chains structure
+func buildJsonChains(response client.Response, chains *cert.Chains) (string, error) {
+	buf, err := json.MarshalIndent(chains, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
 // showRemoteCert trigger the command to open a local cert file and show the details about it
 func showRemoteCerts(domain string, verify bool) error {
-	chains, err := client.GetRemoteCerts(domain, verify)
+	//c := client.Connect(domain, verify)
+	response, err := client.GetRemoteCerts(domain, verify)
 	if err != nil {
 		return err
 	}
 
-	jsonChains, err := cert.GenJsonChains(chains)
+	chains := cert.ParseChains(response.CertificateChains)
+	chains.TlsVersion = response.TlsVersion
+	chains.CipherSuite = response.CipherSuite
+	chains.HostVerification = response.HostVerification
+
+	j, err := buildJsonChains(response, chains)
 	if err != nil {
 		return err
 	}
-	fmt.Println(jsonChains)
+	fmt.Println(j)
 	return nil
 }
