@@ -40,13 +40,12 @@ For a better user experience, you can pipe the `showcert` JSON output to [jq](ht
 
 ```
 $ showcert --verify google.com | jq
-Hostname google.com verification successful
-TLS Version  : 1.3
-Cipher Suite : TLS_AES_128_GCM_SHA256
-Server Name  : google.com
 ```
 ```json
 {
+  "tls_version": "1.3",
+  "cipher_suite": "TLS_AES_128_GCM_SHA256",
+  "host_verification": true,
   "chains": [
     {
       "chain_number": "1/2",
