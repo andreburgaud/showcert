@@ -47,13 +47,13 @@ docker:
 
 # Push showcert docker image to docker hub
 docker-push: docker
-    push docker.io/{{DOCKER_IMAGE}}:{{VERSION}}
-    tag {{DOCKER_IMAGE}}:{{VERSION}} docker.io/{{DOCKER_IMAGE}}:latest
-    push docker.io/{{DOCKER_IMAGE}}:latest
+    docker push docker.io/{{DOCKER_IMAGE}}:{{VERSION}}
+    docker tag {{DOCKER_IMAGE}}:{{VERSION}} docker.io/{{DOCKER_IMAGE}}:latest
+    docker push docker.io/{{DOCKER_IMAGE}}:latest
 
 # Clean local images
 docker-clean:
-    docker rmi $(docker images | grep showcert | tr -s ' '| cut -d ' ' -f 3)
+    docker rmi -f $(docker images | grep showcert | tr -s ' '| cut -d ' ' -f 3)
     docker rmi $(docker images -f dangling=true -q)
 
 # Format Go code
