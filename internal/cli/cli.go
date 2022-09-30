@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -16,6 +17,7 @@ var (
 	Version = "dev"
 )
 
+// Command holds the options and argument of the CLI
 type Command struct {
 	help    bool
 	version bool
@@ -23,6 +25,15 @@ type Command struct {
 	cert    string
 	domain  string
 	args    []string
+}
+
+// ShowCert is the top level container used to generate the global JSON
+type ShowCert struct {
+	ShowCertVersion   string                  `json:"showcert_version"`
+	TlsVersion        string                  `json:"tls_version,omitempty"`
+	CipherSuite       string                  `json:"cipher_suite,omitempty"`
+	HostVerification  bool                    `json:"host_verification"`
+	CertificateChains []cert.CertificateChain `json:"chains"`
 }
 
 // getExe return the executable name without any path
@@ -140,13 +151,27 @@ func (cmd Command) Execute() error {
 	return nil
 }
 
+// buildJsonCert generate a JSON string for a single certificate
+func buildJsonCert(x509Cert *x509.Certificate) (string, error) {
+	c := cert.ParseCertificate(x509Cert, 1, 0)
+	var err error
+	var buf []byte
+	if c != nil {
+		buf, err = json.MarshalIndent(c, "", "  ")
+		if err != nil {
+			return "", err
+		}
+	}
+	return string(buf), nil
+}
+
 // showLocalCert trigger the command to open a local cert file and show the details about it
 func showLocalCert(certFile string) error {
 	c, err := client.GetLocalCert(certFile)
 	if err != nil {
 		return err
 	}
-	jsonCert, err := cert.GenJson(c)
+	jsonCert, err := buildJsonCert(c)
 	if err != nil {
 		return err
 	}
@@ -155,8 +180,8 @@ func showLocalCert(certFile string) error {
 }
 
 // buildJsonChains creates a JSON string from a Chains structure
-func buildJsonChains(response client.Response, chains *cert.Chains) (string, error) {
-	buf, err := json.MarshalIndent(chains, "", "  ")
+func buildJsonChains(showCert *ShowCert) (string, error) {
+	buf, err := json.MarshalIndent(showCert, "", "  ")
 	if err != nil {
 		return "", err
 	}
@@ -171,13 +196,15 @@ func showRemoteCerts(domain string, verify bool) error {
 		return err
 	}
 
-	chains := cert.ParseChains(response.CertificateChains)
-	chains.ShowCertVersion = Version
-	chains.TlsVersion = response.TlsVersion
-	chains.CipherSuite = response.CipherSuite
-	chains.HostVerification = response.HostVerification
+	sc := ShowCert{
+		ShowCertVersion:   Version,
+		TlsVersion:        response.TlsVersion,
+		CipherSuite:       response.CipherSuite,
+		HostVerification:  response.HostVerification,
+		CertificateChains: cert.ParseChains(response.CertificateChains),
+	}
 
-	j, err := buildJsonChains(response, chains)
+	j, err := buildJsonChains(&sc)
 	if err != nil {
 		return err
 	}

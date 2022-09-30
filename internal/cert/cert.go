@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"math/big"
@@ -16,15 +15,6 @@ import (
 	"strings"
 	"time"
 )
-
-// Chains contains a list of chains
-type Chains struct {
-	ShowCertVersion   string             `json:"showcert_version"`
-	TlsVersion        string             `json:"tls_version,omitempty"`
-	CipherSuite       string             `json:"cipher_suite,omitempty"`
-	HostVerification  bool               `json:"host_verification"`
-	CertificateChains []CertificateChain `json:"chains"`
-}
 
 // CertificateChain contains a list of certificates
 type CertificateChain struct {
@@ -211,9 +201,9 @@ func encodePem(cert *x509.Certificate) string {
 	return string(b)
 }
 
-// parseCertificate parses a x509 certificate.
+// ParseCertificate parses a x509 certificate.
 // Modified from https://github.com/cloudflare/cfssl/blob/master/certinfo/certinfo.go
-func parseCertificate(cert *x509.Certificate, total, index int) *Certificate {
+func ParseCertificate(cert *x509.Certificate, total, index int) *Certificate {
 	sha1Fingerprint := sha1.Sum(cert.Raw)
 	sha256Fingerprint := sha256.Sum256(cert.Raw)
 	c := &Certificate{
@@ -271,14 +261,14 @@ func parseName(name pkix.Name) Name {
 }
 
 // ParseChains parses a chain of certificate and return a Chains structure
-func ParseChains(chains [][]*x509.Certificate) *Chains {
+func ParseChains(chains [][]*x509.Certificate) []CertificateChain {
 	total := len(chains)
-	cs := &Chains{}
+	var cc []CertificateChain
 
 	for i, certs := range chains {
-		cs.CertificateChains = append(cs.CertificateChains, *parseCertificates(certs, total, i))
+		cc = append(cc, *parseCertificates(certs, total, i))
 	}
-	return cs
+	return cc
 }
 
 // parseCertificates parses a list of certificates
@@ -288,22 +278,7 @@ func parseCertificates(chain []*x509.Certificate, totalChains, index int) *Certi
 	}
 	totalCerts := len(chain)
 	for i, cert := range chain {
-		cc.Certificates = append(cc.Certificates, *parseCertificate(cert, totalCerts, i))
+		cc.Certificates = append(cc.Certificates, *ParseCertificate(cert, totalCerts, i))
 	}
 	return cc
-}
-
-// GenJson generate a JSON string for a single certificate
-func GenJson(cert *x509.Certificate) (string, error) {
-	c := parseCertificate(cert, 1, 0)
-
-	var err error
-	var buf []byte
-	if c != nil {
-		buf, err = json.MarshalIndent(c, "", "  ")
-		if err != nil {
-			return "", err
-		}
-	}
-	return string(buf), nil
 }
