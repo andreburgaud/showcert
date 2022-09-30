@@ -10,6 +10,7 @@ alias c := clean
 alias t := test
 alias v := version
 alias ghp := github-push
+alias dc := docker-clean
 alias dp := docker-push
 alias r := release
 
@@ -41,19 +42,19 @@ run: release
 
 # Build a local docker image
 docker:
-    sudo docker build -t {{DOCKER_IMAGE}} .
-    sudo docker build --build-arg SHOWCERT_VERSION={{VERSION}} -t {{DOCKER_IMAGE}}:{{VERSION}} .
+    docker build -t {{DOCKER_IMAGE}} .
+    docker build --build-arg SHOWCERT_VERSION={{VERSION}} -t {{DOCKER_IMAGE}}:{{VERSION}} .
 
 # Push showcert docker image to docker hub
 docker-push: docker
-    sudo docker push docker.io/{{DOCKER_IMAGE}}:{{VERSION}}
-    sudo docker tag {{DOCKER_IMAGE}}:{{VERSION}} docker.io/{{DOCKER_IMAGE}}:latest
-    sudo docker push docker.io/{{DOCKER_IMAGE}}:latest
+    push docker.io/{{DOCKER_IMAGE}}:{{VERSION}}
+    tag {{DOCKER_IMAGE}}:{{VERSION}} docker.io/{{DOCKER_IMAGE}}:latest
+    push docker.io/{{DOCKER_IMAGE}}:latest
 
 # Clean local images
 docker-clean:
-    -sudo docker rmi $(sudo docker images | grep showcert | tr -s ' '| cut -d ' ' -f 3)
-    -sudo docker rmi $(sudo docker images -f dangling=true -q)
+    docker rmi $(docker images | grep showcert | tr -s ' '| cut -d ' ' -f 3)
+    docker rmi $(docker images -f dangling=true -q)
 
 # Format Go code
 fmt:
