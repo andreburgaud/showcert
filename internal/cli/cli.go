@@ -172,6 +172,7 @@ func showRemoteCerts(domain string, verify bool) error {
 	}
 
 	chains := cert.ParseChains(response.CertificateChains)
+	chains.ShowCertVersion = Version
 	chains.TlsVersion = response.TlsVersion
 	chains.CipherSuite = response.CipherSuite
 	chains.HostVerification = response.HostVerification

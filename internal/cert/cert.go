@@ -19,6 +19,7 @@ import (
 
 // Chains contains a list of chains
 type Chains struct {
+	ShowCertVersion   string             `json:"showcert_version"`
 	TlsVersion        string             `json:"tls_version,omitempty"`
 	CipherSuite       string             `json:"cipher_suite,omitempty"`
 	HostVerification  bool               `json:"host_verification"`
