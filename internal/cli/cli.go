@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"showcert/internal/client"
 
 	"showcert/internal/cert"
-	"showcert/internal/client"
 )
 
 var (
@@ -51,24 +51,40 @@ func isFile(f string) bool {
 	return true
 }
 
-// usage displays the usage of the command with all its sub commands
-func usage() {
+const options = `
+  -h, --help                  Displays this help
+  -V, --version               Displays application version
+  -c, --cert <cert_file>      Parses a local certificate file
+  -d, --domain <domain_name>  Parses a remote certificate
+  -v, --verify                Requires certificate chain verification
+
+`
+
+const usage = `
+  %s [FLAGS] <domain_name>
+
+`
+
+const examples = `
+  %[1]s google.com
+  %[1]s --domain google.com
+  %[1]s --domain google.com:443
+  %[1]s --verify google.com
+  %[1]s --verify --domain google.com
+  %[1]s --cert some_cert.pem
+
+`
+
+// Usage displays the usage of the command with all its sub commands
+func Usage() {
 	exe := getExe()
 	fmt.Printf("\n%s shows details about local or remote SSL certificates\n\n", getExe())
-	fmt.Println("Usage:")
-	fmt.Printf("  %s --help                  Display this help\n", exe)
-	fmt.Printf("  %s --version               Display application version\n", exe)
-	fmt.Printf("  %s --cert <cert_file>      Point to a local certificate file\n", exe)
-	fmt.Printf("  %s --verify <domain_name>  Request certificate chain verification\n", exe)
-	fmt.Printf("  %s --domain <domain_name>  Point to a remote certificate\n", exe)
-	fmt.Println()
-	fmt.Println("Examples:")
-	fmt.Printf("  %s --domain google.com\n", exe)
-	fmt.Printf("  %s --domain google.com:443\n", exe)
-	fmt.Printf("  %s google.com\n", exe)
-	fmt.Printf("  %s --verify --domain google.com \n", exe)
-	fmt.Printf("  %s --verify google.com\n", exe)
-	fmt.Printf("  %s --cert some_cert.pem\n", exe)
+	fmt.Print("USAGE:")
+	fmt.Printf(usage, exe)
+	fmt.Print("FLAGS:")
+	fmt.Print(options)
+	fmt.Print("EXAMPLES:")
+	fmt.Printf(examples, exe)
 }
 
 // ParseOptions parse CLI options and return a populated Command
@@ -77,7 +93,7 @@ func ParseOptions() *Command {
 	// Overwrite the default help to show the overall tool usage rather than the usage for the top flags
 	// To test it, execute the app with a non-valid option
 	flag.Usage = func() {
-		usage()
+		Usage()
 	}
 
 	var cmd = Command{
@@ -86,16 +102,19 @@ func ParseOptions() *Command {
 		version: false,
 	}
 
-	flag.BoolVar(&cmd.help, "help", false, fmt.Sprintf("Display %s usage", getExe()))
-	flag.BoolVar(&cmd.version, "version", false, fmt.Sprintf("Display %s version", getExe()))
-	flag.BoolVar(&cmd.verify, "verify", false, "Parse the certs of the verified chains (only with --domain options)")
-	flag.StringVar(&cmd.cert, "cert", "", "certificate file")
-	flag.StringVar(&cmd.domain, "domain", "", "domain name and port (example: google.com:443)")
-
+	flag.BoolVar(&cmd.help, "help", false, "help")
+	flag.BoolVar(&cmd.version, "version", false, "version")
+	flag.BoolVar(&cmd.version, "V", false, "version")
+	flag.BoolVar(&cmd.verify, "verify", false, "verify")
+	flag.BoolVar(&cmd.verify, "v", false, "verify")
+	flag.StringVar(&cmd.cert, "cert", "", "certificate")
+	flag.StringVar(&cmd.cert, "c", "", "certificate")
+	flag.StringVar(&cmd.domain, "domain", "", "domain)")
+	flag.StringVar(&cmd.domain, "d", "", "domain)")
 	flag.Parse()
 
 	if cmd.help {
-		usage()
+		Usage()
 		os.Exit(0)
 	}
 
@@ -147,7 +166,7 @@ func (cmd Command) Execute() error {
 	}
 
 	_, _ = fmt.Fprintln(os.Stderr, "no option or argument provided")
-	usage()
+	Usage()
 	return nil
 }
 
