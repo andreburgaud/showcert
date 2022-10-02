@@ -1,4 +1,4 @@
-VERSION := "0.7.0"
+VERSION := "0.7.1"
 APP := "showcert"
 DOCKER_IMAGE := "andreburgaud" / APP
 BUILD_DIR := "build"
@@ -12,7 +12,7 @@ alias v := version
 alias ghp := github-push
 alias dc := docker-clean
 alias dp := docker-push
-alias r := release
+alias rel := release
 
 # Default recipe (this list)
 default:
