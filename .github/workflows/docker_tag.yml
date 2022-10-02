@@ -2,7 +2,7 @@ name: Docker Build and Tag
 
 on:
   push:
-    tags: [ 0.* ]
+    tags: [ "0.*.*" ]
 
 jobs:
 
