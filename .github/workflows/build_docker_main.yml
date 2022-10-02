@@ -1,9 +1,8 @@
-name: Build showcert
+name: Build and Docker
 
 on:
   push:
     branches: [ "main" ]
-    tags: [ 0.* ]
 
 jobs:
 
@@ -38,16 +37,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Set output
-      id: vars
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-
-    - name: Check Tags
-      run: echo ${{ steps.vars.outputs.tag }}
-
     - name: Build and push
       uses: docker/build-push-action@v3
       with:
-        build-args: SHOWCERT_VERSION=${{ steps.vars.outputs.tag }}
+        build-args: SHOWCERT_VERSION=latest
         push: true
-        tags: andreburgaud/showcert:latest, andreburgaud/showcert:${{ steps.vars.outputs.tag }}
+        tags: andreburgaud/showcert:latest
