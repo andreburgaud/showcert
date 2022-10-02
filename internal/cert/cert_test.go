@@ -51,9 +51,7 @@ func b64ToBytes(b64 string) ([]byte, error) {
 
 func TestBytesToHex(t *testing.T) {
 	tt := []struct {
-		//name string
-		b64 string
-		//b        []byte
+		b64      string
 		expected string
 	}{
 		{"SGVsbG8h", "48:65:6C:6C:6F:21"},
@@ -84,18 +82,29 @@ func TestBytesToHex(t *testing.T) {
 // Test the encodePem function by comparing the result of the initial raw content from the local PEM test file and the
 // construction of the PEM string, from the same file.
 func TestEncodePem(t *testing.T) {
-	certFile := "../../test_data/cert.pem"
-	data, err := os.ReadFile(certFile)
-	if err != nil {
-		t.Errorf("error reading local cert %s: %s", certFile, err)
+	tt := []struct {
+		certFile string
+	}{
+		{"../../test_data/rsa_2048_exp3.crt"},
+		{"../../test_data/rsa_4096_exp9.crt"},
+		{"../../test_data/ecdsa.crt"},
+		{"../../test_data/ed25519.crt"},
 	}
-	expected := strings.TrimSpace(string(data))
-	cert, err := client.GetLocalCert(certFile)
-	if err != nil {
-		t.Errorf("error creating cert from local pem file %s: %s", certFile, err)
-	}
-	got := strings.TrimSpace(encodePem(cert))
-	if got != expected {
-		t.Errorf("got %s, expected %s", got, expected)
+	for _, tc := range tt {
+		t.Run(tc.certFile, func(t *testing.T) {
+			data, err := os.ReadFile(tc.certFile)
+			if err != nil {
+				t.Errorf("error reading local cert %s: %s", tc.certFile, err)
+			}
+			expected := strings.TrimSpace(string(data))
+			cert, err := client.GetLocalCert(tc.certFile)
+			if err != nil {
+				t.Errorf("error creating cert from local pem file %s: %s", tc.certFile, err)
+			}
+			got := strings.TrimSpace(encodePem(cert))
+			if got != expected {
+				t.Errorf("got %s, expected %s", got, expected)
+			}
+		})
 	}
 }

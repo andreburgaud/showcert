@@ -21,6 +21,11 @@ default:
 # Clean binaries
 clean:
     -rm -rf {{BUILD_DIR}}
+    -rm -rf tmp
+
+# Create certs for testing
+create_certs:
+    ./create_certs.sh
 
 # Execute tests
 test:

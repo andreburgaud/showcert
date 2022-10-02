@@ -3,6 +3,7 @@ package cert
 import (
 	"bytes"
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -53,6 +54,7 @@ type PublicKey struct {
 	XBits              int    `json:"x_bits,omitempty"`
 	Y                  string `json:"y,omitempty"`
 	YBits              int    `json:"y_bits,omitempty"`
+	Size               int    `json:"public_key_size,omitempty"`
 }
 
 // TODO: Ed25519
@@ -66,6 +68,8 @@ func parsePublicKey(key any, algo x509.PublicKeyAlgorithm) PublicKey {
 		// Not supported
 	case x509.Ed25519:
 		// Not implemented yet
+		ed25519Key := key.(ed25519.PublicKey)
+		pk.Size = len(ed25519Key)
 	case x509.RSA:
 		rsaKey := key.(*rsa.PublicKey)
 		pk.Exponent = rsaKey.E
