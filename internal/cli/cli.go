@@ -61,7 +61,7 @@ const options = `
 `
 
 const usage = `
-  %s [FLAGS] <domain_name>
+  %s [FLAGS] <domain_name> | <cert_file>
 
 `
 
