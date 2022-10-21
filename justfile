@@ -1,4 +1,4 @@
-VERSION := "0.7.2"
+VERSION := "0.8.0"
 APP := "showcert"
 DOCKER_IMAGE := "andreburgaud" / APP
 BUILD_DIR := "build"
@@ -33,11 +33,11 @@ test:
 
 # Build showcert debug version
 build:
-    go build -o {{DEBUG_DIR}}/{{APP}} showcert/cmd/showcert
+    go build -o {{DEBUG_DIR}}/{{APP}} {{APP}}/cmd/{{APP}}
 
 # Build sowcert release version
 release:
-    go build -o {{RELEASE_DIR}}/{{APP}} -ldflags="-s -w -X 'showcert/internal/cli.Version={{VERSION}}'" showcert/cmd/showcert
+    go build -o {{RELEASE_DIR}}/{{APP}} -ldflags="-s -w -X '{{APP}}/internal/cli.Version={{VERSION}}'" {{APP}}/cmd/{{APP}}
     -upx {{RELEASE_DIR}}/{{APP}}
 
 # Quick run test of a release build (help and google.com)
@@ -58,7 +58,7 @@ docker-push: docker
 
 # Clean local images
 docker-clean:
-    docker rmi -f $(docker images | grep showcert | tr -s ' '| cut -d ' ' -f 3)
+    docker rmi -f $(docker images | grep {{APP}} | tr -s ' '| cut -d ' ' -f 3)
     docker rmi $(docker images -f dangling=true -q)
 
 # Format Go code
