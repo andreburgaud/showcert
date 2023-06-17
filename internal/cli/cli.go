@@ -103,14 +103,15 @@ func ParseOptions() *Command {
 	}
 
 	flag.BoolVar(&cmd.help, "help", false, "help")
+	flag.BoolVar(&cmd.help, "h", false, "help")
 	flag.BoolVar(&cmd.version, "version", false, "version")
 	flag.BoolVar(&cmd.version, "V", false, "version")
 	flag.BoolVar(&cmd.verify, "verify", false, "verify")
 	flag.BoolVar(&cmd.verify, "v", false, "verify")
 	flag.StringVar(&cmd.cert, "cert", "", "certificate")
 	flag.StringVar(&cmd.cert, "c", "", "certificate")
-	flag.StringVar(&cmd.domain, "domain", "", "domain)")
-	flag.StringVar(&cmd.domain, "d", "", "domain)")
+	flag.StringVar(&cmd.domain, "domain", "", "domain")
+	flag.StringVar(&cmd.domain, "d", "", "domain")
 	flag.Parse()
 
 	if cmd.help {
