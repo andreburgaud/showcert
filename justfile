@@ -1,6 +1,8 @@
 VERSION := "0.8.2"
 APP := "showcert"
 DOCKER_IMAGE := "andreburgaud" / APP
+BUILD_DIR := "build"
+DEBUG_DIR := BUILD_DIR / "debug"
 
 #alias b := build
 alias c := clean
@@ -32,6 +34,10 @@ create_certs:
 # Execute tests
 test:
     go test -v ./...
+
+# Build showcert debug version (needed for GitHub Actions)
+build:
+    go build -o {{DEBUG_DIR}}/{{APP}} {{APP}}/cmd/{{APP}}
 
 # Check release configuration
 check-release:
