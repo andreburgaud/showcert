@@ -4,14 +4,12 @@ DOCKER_IMAGE := "andreburgaud" / APP
 BUILD_DIR := "build"
 DEBUG_DIR := BUILD_DIR / "debug"
 
-#alias b := build
 alias c := clean
 alias t := test
 alias v := version
 alias ghp := github-push
 alias dc := docker-clean
 alias dp := docker-push
-#alias rel := release
 alias cr := check-release
 alias db := dev-build
 alias rel := release

@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.19.2-alpine3.16 as build
+FROM golang:1.20.5-alpine3.18 as build
 
 ARG SHOWCERT_VERSION=latest
 
