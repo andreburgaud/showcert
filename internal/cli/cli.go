@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	Version = "dev"
+	Version = ""
 )
 
 // Command holds the options and argument of the CLI

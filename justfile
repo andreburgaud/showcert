@@ -1,18 +1,20 @@
-VERSION := "0.8.1"
+VERSION := "0.8.2"
 APP := "showcert"
 DOCKER_IMAGE := "andreburgaud" / APP
-BUILD_DIR := "build"
-DEBUG_DIR := BUILD_DIR / "debug"
-RELEASE_DIR := BUILD_DIR / "release"
 
-alias b := build
+#alias b := build
 alias c := clean
 alias t := test
 alias v := version
 alias ghp := github-push
 alias dc := docker-clean
 alias dp := docker-push
+#alias rel := release
+alias cr := check-release
+alias db := dev-build
 alias rel := release
+alias lrel := local-release
+
 
 # Default recipe (this list)
 default:
@@ -20,8 +22,8 @@ default:
 
 # Clean binaries
 clean:
-    -rm -rf {{BUILD_DIR}}
     -rm -rf tmp
+    -rm -rf dist
 
 # Create certs for testing
 create_certs:
@@ -31,19 +33,21 @@ create_certs:
 test:
     go test -v ./...
 
-# Build showcert debug version
-build:
-    go build -o {{DEBUG_DIR}}/{{APP}} {{APP}}/cmd/{{APP}}
+# Check release configuration
+check-release:
+    goreleaser check
 
-# Build sowcert release version
+# Build a release and publish to GitHub
 release:
-    go build -o {{RELEASE_DIR}}/{{APP}} -ldflags="-s -w -X '{{APP}}/internal/cli.Version={{VERSION}}'" {{APP}}/cmd/{{APP}}
-    -upx {{RELEASE_DIR}}/{{APP}}
+    goreleaser release --clean
 
-# Quick run test of a release build (help and google.com)
-run: release
-    {{RELEASE_DIR}}/{{APP}}
-    {{RELEASE_DIR}}/{{APP}} google.com
+# Build a local snapshot release
+local-release:
+    goreleaser release --clean --snapshot
+
+# Local development build
+dev-build:
+    goreleaser build --clean --single-target --snapshot
 
 # Build a local docker image
 docker:
