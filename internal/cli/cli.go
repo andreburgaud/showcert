@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"showcert/internal/client"
 
 	"showcert/internal/cert"
+	"showcert/internal/client"
 )
 
 var (
@@ -55,6 +55,7 @@ const options = `
   -h, --help                  Displays this help
   -V, --version               Displays application version
   -c, --cert <cert_file>      Parses a local certificate file
+  --cafile <PEM_file>         Loads CAs from a PEM file
   -d, --domain <domain_name>  Parses a remote certificate
   -v, --verify                Requires certificate chain verification
 
@@ -72,6 +73,7 @@ const examples = `
   %[1]s --verify google.com
   %[1]s --verify --domain google.com
   %[1]s --cert some_cert.pem
+  %[1]s --cafile some_ca.pem
 
 `
 
