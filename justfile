@@ -1,4 +1,4 @@
-VERSION := "0.9.1"
+VERSION := "0.9.2"
 APP := "showcert"
 DOCKER_IMAGE := "andreburgaud" / APP
 BUILD_DIR := "build"
