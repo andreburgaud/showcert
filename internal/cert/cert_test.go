@@ -97,11 +97,11 @@ func TestEncodePem(t *testing.T) {
 				t.Errorf("error reading local cert %s: %s", tc.certFile, err)
 			}
 			expected := strings.TrimSpace(string(data))
-			cert, err := client.GetLocalCert(tc.certFile)
+			certs, err := client.GetLocalCerts(tc.certFile)
 			if err != nil {
 				t.Errorf("error creating cert from local pem file %s: %s", tc.certFile, err)
 			}
-			got := strings.TrimSpace(encodePem(cert))
+			got := strings.TrimSpace(encodePem(certs[0]))
 			if got != expected {
 				t.Errorf("got %s, expected %s", got, expected)
 			}

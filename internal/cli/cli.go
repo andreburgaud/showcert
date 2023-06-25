@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -14,7 +13,7 @@ import (
 )
 
 var (
-	Version = ""
+	Version = "dev"
 )
 
 // Command holds the options and argument of the CLI
@@ -22,6 +21,7 @@ type Command struct {
 	help    bool
 	version bool
 	verify  bool
+	cafile  string
 	cert    string
 	domain  string
 	args    []string
@@ -110,6 +110,7 @@ func ParseOptions() *Command {
 	flag.BoolVar(&cmd.verify, "v", false, "verify")
 	flag.StringVar(&cmd.cert, "cert", "", "certificate")
 	flag.StringVar(&cmd.cert, "c", "", "certificate")
+	flag.StringVar(&cmd.cafile, "cafile", "", "cafile")
 	flag.StringVar(&cmd.domain, "domain", "", "domain")
 	flag.StringVar(&cmd.domain, "d", "", "domain")
 	flag.Parse()
@@ -141,7 +142,7 @@ func (cmd Command) Execute() error {
 	}
 
 	if len(cmd.domain) > 0 {
-		err := showRemoteCerts(cmd.domain, cmd.verify)
+		err := showRemoteCerts(cmd.domain, cmd.verify, cmd.cafile)
 		if err != nil {
 			return err
 		}
@@ -159,7 +160,7 @@ func (cmd Command) Execute() error {
 			return nil
 		}
 		// Assuming this is a domain
-		err := showRemoteCerts(arg, cmd.verify)
+		err := showRemoteCerts(arg, cmd.verify, cmd.cafile)
 		if err != nil {
 			return err
 		}
@@ -171,32 +172,29 @@ func (cmd Command) Execute() error {
 	return nil
 }
 
-// buildJsonCert generate a JSON string for a single certificate
-func buildJsonCert(x509Cert *x509.Certificate) (string, error) {
-	c := cert.ParseCertificate(x509Cert, 1, 0)
-	var err error
-	var buf []byte
-	if c != nil {
-		buf, err = json.MarshalIndent(c, "", "  ")
-		if err != nil {
-			return "", err
-		}
-	}
-	return string(buf), nil
-}
-
 // showLocalCert trigger the command to open a local cert file and show the details about it
 func showLocalCert(certFile string) error {
-	c, err := client.GetLocalCert(certFile)
+	certs, err := client.GetLocalCerts(certFile)
 	if err != nil {
 		return err
 	}
-	jsonCert, err := buildJsonCert(c)
+	chain := cert.ParseCertificates(certs, 1, 0)
+
+	j, err := buildJsonChain(chain)
 	if err != nil {
 		return err
 	}
-	fmt.Println(jsonCert)
+	fmt.Println(j)
 	return nil
+}
+
+// buildJsonChain creates a JSON string from one chain of certificates (one or more certificates)
+func buildJsonChain(chain *cert.CertificateChain) (string, error) {
+	buf, err := json.MarshalIndent(chain, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
 }
 
 // buildJsonChains creates a JSON string from a Chains structure
@@ -209,9 +207,8 @@ func buildJsonChains(showCert *ShowCert) (string, error) {
 }
 
 // showRemoteCert trigger the command to open a local cert file and show the details about it
-func showRemoteCerts(domain string, verify bool) error {
-	//c := client.Connect(domain, verify)
-	response, err := client.GetRemoteCerts(domain, verify)
+func showRemoteCerts(domain string, verify bool, cafile string) error {
+	response, err := client.GetRemoteCerts(domain, verify, cafile)
 	if err != nil {
 		return err
 	}

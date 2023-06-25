@@ -270,13 +270,13 @@ func ParseChains(chains [][]*x509.Certificate) []CertificateChain {
 	var cc []CertificateChain
 
 	for i, certs := range chains {
-		cc = append(cc, *parseCertificates(certs, total, i))
+		cc = append(cc, *ParseCertificates(certs, total, i))
 	}
 	return cc
 }
 
-// parseCertificates parses a list of certificates
-func parseCertificates(chain []*x509.Certificate, totalChains, index int) *CertificateChain {
+// ParseCertificates parses a list of certificates
+func ParseCertificates(chain []*x509.Certificate, totalChains, index int) *CertificateChain {
 	cc := &CertificateChain{
 		ChainNumber: fmt.Sprintf("%d/%d", index+1, totalChains),
 	}

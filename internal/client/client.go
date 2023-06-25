@@ -33,8 +33,19 @@ type Response struct {
 	CertificateChains [][]*x509.Certificate
 }
 
+// pemToCertPool takes a PEM file and returns a CertPool used to add self-signed Root CAs to the client
+func pemToCertPool(cafile string) (*x509.CertPool, error) {
+	certPool := x509.NewCertPool()
+	data, err := os.ReadFile(cafile)
+	if err != nil {
+		return nil, err
+	}
+	certPool.AppendCertsFromPEM(data)
+	return certPool, nil
+}
+
 // GetRemoteCerts returns one or more certificate chains from a TLS server
-func GetRemoteCerts(domain string, verify bool) (Response, error) {
+func GetRemoteCerts(domain string, verify bool, cafile string) (Response, error) {
 	var host, port string
 
 	var err error
@@ -43,12 +54,22 @@ func GetRemoteCerts(domain string, verify bool) (Response, error) {
 		port = "443"
 	}
 
+	config := &tls.Config{
+		InsecureSkipVerify: !verify,
+		MinVersion:         tls.VersionTLS10, // Intentional to test SSL
+	}
+
+	if len(cafile) > 0 {
+		cp, err := pemToCertPool(cafile)
+		if err != nil {
+			return Response{}, err
+		}
+		config.RootCAs = cp
+	}
+
 	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second},
-		"tcp", net.JoinHostPort(host, port),
-		&tls.Config{
-			InsecureSkipVerify: !verify,
-			MinVersion:         tls.VersionTLS10, // Intentional to test SSL
-		})
+		"tcp", net.JoinHostPort(host, port), config)
+
 	if err != nil {
 		return Response{}, err
 	}
@@ -85,22 +106,29 @@ func GetRemoteCerts(domain string, verify bool) (Response, error) {
 	}, nil
 }
 
-// GetLocalCert builds and return an SSL Certificate object given a valid cert file (PEM format)
-func GetLocalCert(certFile string) (*x509.Certificate, error) {
-
+// GetLocalCerts builds and return an array of SSL Certificates given a valid cert file (PEM format)
+func GetLocalCerts(certFile string) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
 	// Open and read PEM file
 	data, err := os.ReadFile(certFile)
 	if err != nil {
 		return nil, err
 	}
-	block, rest := pem.Decode(data)
-	if block == nil || block.Type != "CERTIFICATE" {
-		_, _ = fmt.Printf("rest of PEM file content: %x", rest)
-		return nil, fmt.Errorf("bad PEM file %s", certFile)
+	for {
+		block, rest := pem.Decode(data)
+		if block == nil || block.Type != "CERTIFICATE" {
+			_, _ = fmt.Printf("rest of PEM file content: %x", rest)
+			return nil, fmt.Errorf("bad PEM file %s", certFile)
+		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		certs = append(certs, cert)
+		if len(rest) == 0 {
+			break
+		}
+		data = rest
 	}
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-	return cert, nil
+	return certs, nil
 }
