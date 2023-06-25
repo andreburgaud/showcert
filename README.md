@@ -3,7 +3,7 @@
 `showcert` displays SSL certificate attributes in JSON format.
 
 The target can be a local file or a remote server. In the latter scenario, 
-the argument is a server name and port if different than the default TLS port 443.
+the argument is a server name and port if different from the default TLS port 443.
 
 ## Examples
 
@@ -20,20 +20,25 @@ $ showcert --help
 
 showcert shows details about local or remote SSL certificates
 
-Usage:
-  showcert --help                  Display this help
-  showcert --version               Display application version
-  showcert --cert <cert_file>      Point to a local certificate file
-  showcert --verify                Request certificate chain verification
-  showcert --domain <domain_name>  Point to a remote certificate
+USAGE:
+  showcert [FLAGS] <domain_name> | <cert_file>
 
-Examples:
+FLAGS:
+  -h, --help                  Displays this help
+  -V, --version               Displays application version
+  -c, --cert <cert_file>      Parses a local certificate file
+  --cafile <PEM_file>         Loads CAs from a PEM file
+  -d, --domain <domain_name>  Parses a remote certificate
+  -v, --verify                Requires certificate chain verification
+
+EXAMPLES:
+  showcert google.com
   showcert --domain google.com
   showcert --domain google.com:443
-  showcert google.com
-  showcert --verify --domain google.com 
   showcert --verify google.com
+  showcert --verify --domain google.com
   showcert --cert some_cert.pem
+  showcert --cafile some_ca.pem
 ```
 
 For a better user experience, you can pipe the `showcert` JSON output to [jq](https://stedolan.github.io/jq/).
@@ -140,7 +145,6 @@ $ docker run --rm andreburgaud/showcert google.com | jq -r '.chains[0].certifica
 ...
 ```
 
-
 ## Build
 
 ### Development
@@ -153,22 +157,23 @@ $ just build
 If you only have [Go](https://go.dev/) installed:
 
 ```
-$ go build -o showcert *.go
+$ go build -o showcert showcert/cmd/showcert
 ```
 
 ### Release
 
-A release version will be smaller and optimized.
-It requires [just](https://github.com/casey/just), [Go](https://go.dev/) and [UPX](https://upx.github.io/):
+`Showcert` uses [GoReaser](https://goreleaser.com/) to cross-compile the project and deploy binaries to GitHub. 
+
+To generate a local release, you can execute the following command
 
 ```
-$ just release
+$ just local-release
 ```
 
 If you only have [Go](https://go.dev/) installed:
 
 ```
-$ go build -o showcert -ldflags="-s -w -X 'main.version=0.2.0'" *.go
+$ go build -o showcert -ldflags="-s -w -X 'showcert/internal/cli.Version=1.2.3'" showcert/cmd/showcert
 ```
 
 ## License
