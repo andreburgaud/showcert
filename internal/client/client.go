@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -34,40 +35,63 @@ type Response struct {
 }
 
 // pemToCertPool takes a PEM file and returns a CertPool used to add self-signed Root CAs to the client
-func pemToCertPool(cafile string) (*x509.CertPool, error) {
-	certPool := x509.NewCertPool()
+func pemToCertPool(cp *x509.CertPool, cafile string) error {
 	data, err := os.ReadFile(cafile)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	certPool.AppendCertsFromPEM(data)
-	return certPool, nil
+	cp.AppendCertsFromPEM(data)
+	return nil
+}
+
+// dirToCertPool loads all the PEM files in a directory and returns a CertPool
+func dirToCertPool(certPool *x509.CertPool, cadir string) error {
+	files, err := os.ReadDir(cadir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		if err := pemToCertPool(certPool, filepath.Join(cadir, file.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetRemoteCerts returns one or more certificate chains from a TLS server
-func GetRemoteCerts(domain string, verify bool, cafile string) (Response, error) {
-	var host, port string
-
-	var err error
-	if host, port, err = net.SplitHostPort(domain); err != nil {
-		host = domain
-		port = "443"
-	}
+func GetRemoteCerts(verify bool, host, port, cafile, cadir string) (Response, error) {
 
 	config := &tls.Config{
 		InsecureSkipVerify: !verify,
 		MinVersion:         tls.VersionTLS10, // Intentional to test SSL
 	}
 
+	var cp *x509.CertPool
+
 	if len(cafile) > 0 {
-		cp, err := pemToCertPool(cafile)
-		if err != nil {
+		cp = x509.NewCertPool()
+		if err := pemToCertPool(cp, cafile); err != nil {
 			return Response{}, err
 		}
+	}
+
+	if len(cadir) > 0 {
+		if cp == nil {
+			cp = x509.NewCertPool()
+		}
+		if err := dirToCertPool(cp, cadir); err != nil {
+			return Response{}, err
+		}
+	}
+
+	if cp != nil {
 		config.RootCAs = cp
 	}
 
-	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 5 * time.Second},
+	conn, err := tls.DialWithDialer(&net.Dialer{Timeout: 2 * time.Second},
 		"tcp", net.JoinHostPort(host, port), config)
 
 	if err != nil {

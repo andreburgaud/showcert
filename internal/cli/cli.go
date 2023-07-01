@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -16,24 +17,46 @@ var (
 	Version = "dev"
 )
 
+const ShowCertUrl = "https://github.com/andreburgaud/showcert"
+
 // Command holds the options and argument of the CLI
 type Command struct {
 	help    bool
 	version bool
 	verify  bool
 	cafile  string
-	cert    string
-	domain  string
-	args    []string
+	cadir   string
+	file    string
+	host    string
+	port    string
 }
 
-// ShowCert is the top level container used to generate the global JSON
+// ShowCert is the header
 type ShowCert struct {
-	ShowCertVersion   string                  `json:"showcert_version"`
-	TlsVersion        string                  `json:"tls_version,omitempty"`
-	CipherSuite       string                  `json:"cipher_suite,omitempty"`
-	HostVerification  bool                    `json:"host_verification"`
+	Version          string `json:"version"`
+	Url              string `json:"url"`
+	TlsVersion       string `json:"tls_version,omitempty"`
+	Host             string `json:"host,omitempty"`
+	Port             string `json:"port,omitempty"`
+	File             string `json:"file,omitempty"`
+	CipherSuite      string `json:"cipher_suite,omitempty"`
+	HostVerification bool   `json:"host_verification"`
+	CaFile           string `json:"cafile,omitempty"`
+	CaDir            string `json:"cadir,omitempty"`
+}
+
+// ShowCertSuccess is the top level container used to generate the global JSON
+type ShowCertSuccess struct {
+	ShowCert          ShowCert                `json:"showcert"`
+	TlsVersion        string                  `json:"tls_version"`
+	CipherSuite       string                  `json:"cipher_suite"`
 	CertificateChains []cert.CertificateChain `json:"chains"`
+}
+
+// ShowCertError is the container for an error
+type ShowCertError struct {
+	ShowCert     ShowCert `json:"showcert"`
+	ErrorMessage string   `json:"error"`
 }
 
 // getExe return the executable name without any path
@@ -54,10 +77,11 @@ func isFile(f string) bool {
 const options = `
   -h, --help                  Displays this help
   -V, --version               Displays application version
-  -c, --cert <cert_file>      Parses a local certificate file
-  --cafile <PEM_file>         Loads CAs from a PEM file
-  -d, --domain <domain_name>  Parses a remote certificate
+  -f, --file <cert_file>      Parses a local certificate file (PEM format) 
   -v, --verify                Requires certificate chain verification
+  --host <host:[port]>        Parses a remote certificate for a given host
+  --cafile <PEM_file>         Loads CAs from a PEM file
+  --cadir <directory>         Loads CAs from a directory containing PEM files
 
 `
 
@@ -68,12 +92,13 @@ const usage = `
 
 const examples = `
   %[1]s google.com
-  %[1]s --domain google.com
-  %[1]s --domain google.com:443
+  %[1]s --host google.com
+  %[1]s --host google.com:443
   %[1]s --verify google.com
   %[1]s --verify --domain google.com
-  %[1]s --cert some_cert.pem
+  %[1]s --file some_cert.pem
   %[1]s --cafile some_ca.pem
+  %[1]s --cadir some_directory
 
 `
 
@@ -110,11 +135,11 @@ func ParseOptions() *Command {
 	flag.BoolVar(&cmd.version, "V", false, "version")
 	flag.BoolVar(&cmd.verify, "verify", false, "verify")
 	flag.BoolVar(&cmd.verify, "v", false, "verify")
-	flag.StringVar(&cmd.cert, "cert", "", "certificate")
-	flag.StringVar(&cmd.cert, "c", "", "certificate")
+	flag.StringVar(&cmd.file, "file", "", "file")
+	flag.StringVar(&cmd.file, "f", "", "file")
 	flag.StringVar(&cmd.cafile, "cafile", "", "cafile")
-	flag.StringVar(&cmd.domain, "domain", "", "domain")
-	flag.StringVar(&cmd.domain, "d", "", "domain")
+	flag.StringVar(&cmd.cadir, "cadir", "", "cadir")
+	flag.StringVar(&cmd.host, "host", "", "host")
 	flag.Parse()
 
 	if cmd.help {
@@ -127,51 +152,72 @@ func ParseOptions() *Command {
 		os.Exit(0)
 	}
 
-	cmd.args = flag.Args()
+	args := flag.Args()
 
+	// Check if any argument is a domain or a cert file and run the equivalent of --domain or --cert
+	if len(args) > 0 {
+		arg := args[0]
+		if isFile(arg) {
+			cmd.file = arg
+		}
+		// Assuming this is a domain
+		cmd.host = arg
+	}
+
+	h, p, err := net.SplitHostPort(cmd.host)
+	if err != nil {
+		cmd.port = "443"
+	} else {
+		cmd.host = h
+		cmd.port = p
+	}
 	return &cmd
 }
 
 // Execute the command from the properties of Command
 func (cmd Command) Execute() error {
 
-	if len(cmd.cert) > 0 {
-		err := showLocalCert(cmd.cert)
+	if len(cmd.file) > 0 {
+		err := showLocalCert(cmd.file)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	if len(cmd.domain) > 0 {
-		err := showRemoteCerts(cmd.domain, cmd.verify, cmd.cafile)
+	if len(cmd.host) > 0 {
+		err := showRemoteCerts(cmd.verify, cmd.host, cmd.port, cmd.cafile, cmd.cadir)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
-
-	// Check if any argument is a domain or a cert file and run the equivalent of --domain or --cert
-	if len(cmd.args) > 0 {
-		arg := cmd.args[0]
-		if isFile(arg) {
-			err := showLocalCert(arg)
-			if err != nil {
-				return err
-			}
-			return nil
-		}
-		// Assuming this is a domain
-		err := showRemoteCerts(arg, cmd.verify, cmd.cafile)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
 	_, _ = fmt.Fprintln(os.Stderr, "no option or argument provided")
 	Usage()
 	return nil
+}
+
+// PrintError prints an error in JSON format
+func (cmd Command) PrintError(err error) {
+	sce := ShowCertError{
+		ShowCert: ShowCert{
+			Version:          Version,
+			Url:              ShowCertUrl,
+			HostVerification: cmd.verify,
+			Host:             cmd.host,
+			Port:             cmd.port,
+			File:             cmd.file,
+			CaFile:           cmd.cafile,
+			CaDir:            cmd.cadir,
+		},
+		ErrorMessage: err.Error(),
+	}
+	buf, err := json.MarshalIndent(sce, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(buf))
 }
 
 // showLocalCert trigger the command to open a local cert file and show the details about it
@@ -200,8 +246,8 @@ func buildJsonChain(chain *cert.CertificateChain) (string, error) {
 }
 
 // buildJsonChains creates a JSON string from a Chains structure
-func buildJsonChains(showCert *ShowCert) (string, error) {
-	buf, err := json.MarshalIndent(showCert, "", "  ")
+func buildJsonChains(showCertSuccess *ShowCertSuccess) (string, error) {
+	buf, err := json.MarshalIndent(showCertSuccess, "", "  ")
 	if err != nil {
 		return "", err
 	}
@@ -209,17 +255,24 @@ func buildJsonChains(showCert *ShowCert) (string, error) {
 }
 
 // showRemoteCert trigger the command to open a local cert file and show the details about it
-func showRemoteCerts(domain string, verify bool, cafile string) error {
-	response, err := client.GetRemoteCerts(domain, verify, cafile)
+func showRemoteCerts(verify bool, host, port, cafile, cadir string) error {
+	response, err := client.GetRemoteCerts(verify, host, port, cafile, cadir)
 	if err != nil {
 		return err
 	}
 
-	sc := ShowCert{
-		ShowCertVersion:   Version,
+	sc := ShowCertSuccess{
+		ShowCert: ShowCert{
+			Version:          Version,
+			Url:              ShowCertUrl,
+			HostVerification: verify,
+			Host:             host,
+			Port:             port,
+			CaFile:           cafile,
+			CaDir:            cadir,
+		},
 		TlsVersion:        response.TlsVersion,
 		CipherSuite:       response.CipherSuite,
-		HostVerification:  response.HostVerification,
 		CertificateChains: cert.ParseChains(response.CertificateChains),
 	}
 
