@@ -111,7 +111,7 @@ func GetRemoteCerts(verify bool, host, port, cafile, cadir string) (Response, er
 
 	if verify {
 		verifiedChains := state.VerifiedChains
-		if verifiedChains != nil && len(verifiedChains) > 0 {
+		if len(verifiedChains) > 0 {
 			chains = verifiedChains
 		} else {
 			_, _ = fmt.Println("no verified certificates, trying peers")

@@ -225,7 +225,7 @@ func ParseCertificate(cert *x509.Certificate, total, index int) *Certificate {
 		SHA256Fingerprint:  bytesToHex(sha256Fingerprint[:]),
 		OCSPServer:         strings.Join(cert.OCSPServer, ", "),
 		Signature:          bytesToHex(cert.Signature),
-		SignatureAlgorithm: fmt.Sprintf("%s", cert.SignatureAlgorithm),
+		SignatureAlgorithm: cert.SignatureAlgorithm.String(),
 		CertPublicKey:      parsePublicKey(cert.PublicKey, cert.PublicKeyAlgorithm),
 		AuthorityKeyId:     bytesToHex(cert.AuthorityKeyId),
 		KeyUsage:           strings.Join(getKeyUsage(cert.KeyUsage), ", "),

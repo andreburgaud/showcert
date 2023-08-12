@@ -37,6 +37,10 @@ test:
 build:
     go build -o {{DEBUG_DIR}}/{{APP}} {{APP}}/cmd/{{APP}}
 
+# Lint with golangci-lint
+lint:
+    golangci-lint run
+
 # Check release configuration
 check-release:
     goreleaser check
