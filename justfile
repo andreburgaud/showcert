@@ -59,8 +59,8 @@ dev-build:
 
 # Build a local docker image
 docker:
-    docker build -t {{DOCKER_IMAGE}} .
-    docker build --build-arg SHOWCERT_VERSION={{VERSION}} -t {{DOCKER_IMAGE}}:{{VERSION}} .
+    docker buildx build -t {{DOCKER_IMAGE}} .
+    docker buildx build --build-arg SHOWCERT_VERSION={{VERSION}} -t {{DOCKER_IMAGE}}:{{VERSION}} .
 
 # Push showcert docker image to docker hub
 docker-push: docker
