@@ -62,6 +62,10 @@ docker:
     docker buildx build -t {{DOCKER_IMAGE}} .
     docker buildx build --build-arg SHOWCERT_VERSION={{VERSION}} -t {{DOCKER_IMAGE}}:{{VERSION}} .
 
+# Run docker scout (image scan)
+docker-scout:
+    docker scout cves andreburgaud/showcert:{{VERSION}}
+
 # Push showcert docker image to docker hub
 docker-push: docker
     docker push docker.io/{{DOCKER_IMAGE}}:{{VERSION}}
