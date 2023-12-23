@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -135,6 +136,11 @@ func GetLocalCerts(certFile string) ([]*x509.Certificate, error) {
 	var certs []*x509.Certificate
 	// Open and read PEM file
 	data, err := os.ReadFile(certFile)
+
+	// Remove any prefix or trailing new lines
+	data = bytes.TrimLeft(data, "\n")
+	data = bytes.TrimRight(data, "\n")
+
 	if err != nil {
 		return nil, err
 	}
