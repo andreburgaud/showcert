@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -8,6 +9,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"showcert/internal/cert"
 	"showcert/internal/client"
@@ -77,7 +79,7 @@ func isFile(f string) bool {
 const options = `
   -h, --help                  Displays this help
   -V, --version               Displays application version
-  -f, --file <cert_file>      Parses a local certificate file (PEM format) 
+  -f, --file <cert_file>      Parses a local certificate file (PEM format)
   -v, --verify                Requires certificate chain verification
   --host <host:[port]>        Parses a remote certificate for a given host
   --cafile <PEM_file>         Loads CAs from a PEM file
@@ -177,6 +179,7 @@ func ParseOptions() *Command {
 // Execute the command from the properties of Command
 func (cmd Command) Execute() error {
 
+	// Read local PEM file
 	if len(cmd.file) > 0 {
 		err := showLocalCert(cmd.file)
 		if err != nil {
@@ -185,6 +188,7 @@ func (cmd Command) Execute() error {
 		return nil
 	}
 
+	// Retreive a remote cert
 	if len(cmd.host) > 0 {
 		err := showRemoteCerts(cmd.verify, cmd.host, cmd.port, cmd.cafile, cmd.cadir)
 		if err != nil {
@@ -192,8 +196,13 @@ func (cmd Command) Execute() error {
 		}
 		return nil
 	}
-	_, _ = fmt.Fprintln(os.Stderr, "no option or argument provided")
-	Usage()
+
+	// read PEM from stdin
+	err := showStdinCert()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -223,6 +232,32 @@ func (cmd Command) PrintError(err error) {
 // showLocalCert trigger the command to open a local cert file and show the details about it
 func showLocalCert(certFile string) error {
 	certs, err := client.GetLocalCerts(certFile)
+	if err != nil {
+		return err
+	}
+	chain := cert.ParseCertificates(certs, 1, 0)
+
+	j, err := buildJsonChain(chain)
+	if err != nil {
+		return err
+	}
+	fmt.Println(j)
+	return nil
+}
+
+// showStdinCert trigger the command to parse stdin (assuming a PEM format) and printing human readable certs
+func showStdinCert() error {
+	var data []string
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		data = append(data, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	certs, err := client.GetCertsFromBytes([]byte(strings.Join(data, "\n")))
 	if err != nil {
 		return err
 	}

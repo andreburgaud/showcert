@@ -133,22 +133,26 @@ func GetRemoteCerts(verify bool, host, port, cafile, cadir string) (Response, er
 
 // GetLocalCerts builds and return an array of SSL Certificates given a valid cert file (PEM format)
 func GetLocalCerts(certFile string) ([]*x509.Certificate, error) {
-	var certs []*x509.Certificate
-	// Open and read PEM file
 	data, err := os.ReadFile(certFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCertsFromBytes(data)
+}
+
+func GetCertsFromBytes(data []byte) ([]*x509.Certificate, error) {
+	var certs []*x509.Certificate
 
 	// Remove any prefix or trailing new lines
 	data = bytes.TrimLeft(data, "\n")
 	data = bytes.TrimRight(data, "\n")
 
-	if err != nil {
-		return nil, err
-	}
 	for {
 		block, rest := pem.Decode(data)
 		if block == nil || block.Type != "CERTIFICATE" {
 			_, _ = fmt.Printf("rest of PEM file content: %x", rest)
-			return nil, fmt.Errorf("bad PEM file %s", certFile)
+			return nil, fmt.Errorf("bad PEM format")
 		}
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
