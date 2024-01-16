@@ -2,8 +2,7 @@
 
 `showcert` displays SSL certificate attributes in JSON format.
 
-The target can be a local file or a remote server. In the latter scenario,
-the argument is a server name and port if different from the default TLS port 443.
+The target can be a local file or a remote server. The argument is a server name and port (if different than the default TLS port 443).
 
 ## Examples
 
@@ -172,9 +171,9 @@ go build -o showcert showcert/cmd/showcert
 
 ### Release
 
-`Showcert` uses [GoReaser](https://goreleaser.com/) to cross-compile the project and deploy binaries to GitHub.
+`Showcert` uses [GoReleaser](https://goreleaser.com/) to cross-compile the project and deploy binaries to GitHub.
 
-To generate a local release, you can execute the following command
+To generate a local release, you can execute the following command:
 
 ```
 just local-release
